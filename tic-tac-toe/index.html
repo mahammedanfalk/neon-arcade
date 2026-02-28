@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Neon Tic-Tac-Toe — Play X vs O with glowing visuals and AI opponent.">
+    <meta name="description"
+        content="Neon Tic-Tac-Toe — Play X vs O with glowing visuals. AI, local, or online multiplayer.">
     <title>Tic-Tac-Toe — Neon Edition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,6 +39,45 @@
             <button class="mode-btn" id="mode-2p" data-mode="2p">
                 <span class="mode-icon">👥</span> vs Friend
             </button>
+            <button class="mode-btn" id="mode-online" data-mode="online">
+                <span class="mode-icon">🌐</span> Online
+            </button>
+        </div>
+
+        <!-- Online Panel -->
+        <div id="online-panel" class="hidden">
+            <div id="online-lobby">
+                <button id="create-room-btn" class="online-action-btn">
+                    <span>🏠</span> Create Room
+                </button>
+                <div class="online-divider">OR</div>
+                <div id="join-section">
+                    <input type="text" id="room-code-input" placeholder="Enter room code" maxlength="6"
+                        autocomplete="off" spellcheck="false">
+                    <button id="join-room-btn" class="online-action-btn join-btn">
+                        <span>🔗</span> Join
+                    </button>
+                </div>
+            </div>
+
+            <div id="online-waiting" class="hidden">
+                <div class="waiting-spinner"></div>
+                <p id="waiting-text">Creating room...</p>
+                <div id="room-code-display" class="hidden">
+                    <span class="room-label">ROOM CODE</span>
+                    <span id="room-code" class="room-code"></span>
+                    <button id="copy-code-btn" class="copy-btn" title="Copy code">📋</button>
+                </div>
+                <p id="share-hint" class="hidden">Share this code with your friend!</p>
+                <button id="cancel-online-btn" class="ghost-btn">Cancel</button>
+            </div>
+
+            <div id="online-connected" class="hidden">
+                <div class="connected-badge">
+                    <span class="pulse-dot"></span> Connected
+                </div>
+                <p id="your-mark-label">You are <span id="your-mark" class="x-color">X</span></p>
+            </div>
         </div>
 
         <!-- Scoreboard -->
@@ -81,12 +121,14 @@
         <!-- Reset -->
         <button id="reset-btn" class="neon-btn">NEW GAME</button>
         <button id="reset-scores-btn" class="ghost-btn">Reset Scores</button>
+        <button id="disconnect-btn" class="ghost-btn danger hidden">Disconnect</button>
 
         <footer id="footer">
             <p>You are X • AI / Player 2 is O</p>
         </footer>
     </div>
 
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="../sfx.js"></script>
     <script src="game.js"></script>
 </body>
