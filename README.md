@@ -2,7 +2,7 @@
 
 A collection of retro-inspired browser games with stunning neon aesthetics.
 
-**Live at:** [https://YOUR_USERNAME.github.io/neon-arcade/](https://YOUR_USERNAME.github.io/neon-arcade/)
+**Live at:** [https://mahammedanfalk.github.io/neon-arcade/](https://mahammedanfalk.github.io/neon-arcade/)
 
 ## 🎮 Games
 
