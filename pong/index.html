@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Neon Pong — Classic arcade paddle duel with glowing visuals and AI opponent.">
+    <title>Pong — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link">
+                <span>←</span> BACK TO ARCADE
+            </a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">PONG</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <!-- Mode selector -->
+        <div id="mode-selector">
+            <button class="mode-btn active" id="mode-ai" data-mode="ai">
+                <span class="mode-icon">🤖</span> vs AI
+            </button>
+            <button class="mode-btn" id="mode-2p" data-mode="2p">
+                <span class="mode-icon">👥</span> 2 Player
+            </button>
+        </div>
+
+        <!-- Difficulty (AI only) -->
+        <div id="difficulty-selector">
+            <button class="diff-btn" data-diff="easy">Easy</button>
+            <button class="diff-btn active" data-diff="medium">Medium</button>
+            <button class="diff-btn" data-diff="hard">Hard</button>
+        </div>
+
+        <!-- Scoreboard -->
+        <div id="scoreboard">
+            <div class="score-side left-side">
+                <span class="player-label" id="p1-label">YOU</span>
+                <span class="score-val" id="score-left">0</span>
+            </div>
+            <div class="score-divider">—</div>
+            <div class="score-side right-side">
+                <span class="score-val" id="score-right">0</span>
+                <span class="player-label" id="p2-label">AI</span>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <canvas id="pong-canvas" width="700" height="500"></canvas>
+
+        <!-- Overlay for start / game over -->
+        <div id="overlay">
+            <div id="overlay-content">
+                <div id="overlay-icon">🏓</div>
+                <h2 id="overlay-title">Ready to Play?</h2>
+                <p id="overlay-info">
+                    <span class="key">W</span> / <span class="key">S</span> — Left Paddle
+                    <br>
+                    <span class="key">↑</span> / <span class="key">↓</span> — Right Paddle (2P)
+                </p>
+                <button id="play-btn" class="neon-btn">START GAME</button>
+            </div>
+        </div>
+
+        <!-- Controls hint -->
+        <div id="controls-hint">
+            <span>Press <span class="key">Space</span> to pause</span>
+        </div>
+
+        <footer id="footer">
+            <p>First to 7 wins the match</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>

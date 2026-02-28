@@ -131,5 +131,22 @@ window.NeonSFX = (function () {
         return muted;
     }
 
-    return { eat, gameOver, gameStart, turn, pause, hover, click, locked, place, win, draw, toggleMute, isMuted };
+    /** Paddle hit (Pong) — short mid-pitch pop */
+    function paddleHit() {
+        playTone(660, 0.06, 'square', 0.09);
+        setTimeout(() => playTone(880, 0.04, 'square', 0.06), 30);
+    }
+
+    /** Wall bounce (Pong) — soft tick */
+    function wallBounce() {
+        playTone(440, 0.04, 'triangle', 0.06);
+    }
+
+    /** Score point (Pong) — rising blip */
+    function score() {
+        playTone(600, 0.08, 'square', 0.08);
+        setTimeout(() => playTone(900, 0.1, 'square', 0.07), 70);
+    }
+
+    return { eat, gameOver, gameStart, turn, pause, hover, click, locked, place, win, draw, paddleHit, wallBounce, score, toggleMute, isMuted };
 })();
