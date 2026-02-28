@@ -188,6 +188,68 @@ body::before {
     font-size: 0.9rem;
 }
 
+/* ===== Variant Toggle ===== */
+#variant-toggle {
+    display: flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-subtle);
+    border-radius: 30px;
+    padding: 3px;
+}
+
+.variant-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 6px 16px;
+    border: none;
+    border-radius: 26px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.variant-btn:hover {
+    color: var(--text-secondary);
+}
+
+.variant-btn.active {
+    background: rgba(255, 230, 0, 0.1);
+    color: var(--neon-yellow);
+    box-shadow: 0 0 10px rgba(255, 230, 0, 0.08);
+}
+
+/* ===== Vanishing / Fading Cells (Infinite mode) ===== */
+.cell.fading {
+    opacity: 0.35;
+    border-style: dashed;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.cell.vanish {
+    animation: cellVanish 0.35s ease forwards;
+}
+
+@keyframes cellVanish {
+    0% {
+        transform: scale(1);
+        opacity: 0.35;
+    }
+
+    50% {
+        transform: scale(1.15);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
 /* ===== Scoreboard ===== */
 #scoreboard {
     display: flex;

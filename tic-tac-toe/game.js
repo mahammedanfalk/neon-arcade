@@ -1,4 +1,4 @@
-// ===== Tic-Tac-Toe — Neon Edition (with Online Multiplayer) =====
+// ===== Tic-Tac-Toe — Neon Edition (Online + Infinite Variant) =====
 (function () {
     'use strict';
 
@@ -21,19 +21,24 @@
     };
 
     const PEER_PREFIX = 'neonarcade-ttt-';
+    const MAX_MARKS = 3; // Max marks per player in infinite mode
 
     // ===== State =====
     let board = Array(9).fill(null);
     let currentPlayer = 'X';
     let gameActive = true;
     let mode = 'ai'; // 'ai' | '2p' | 'online'
+    let variant = 'classic'; // 'classic' | 'infinite'
     let scores = { X: 0, O: 0, draw: 0 };
     let aiThinking = false;
+
+    // Infinite variant: track move order per player
+    let moveHistory = { X: [], O: [] };
 
     // Online state
     let peer = null;
     let conn = null;
-    let myMark = null; // 'X' or 'O'
+    let myMark = null;
     let isHost = false;
     let roomCode = '';
 
@@ -76,6 +81,14 @@
             });
         });
 
+        // Variant buttons
+        $$('.variant-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                if (window.NeonSFX) NeonSFX.click();
+                setVariant(btn.dataset.variant);
+            });
+        });
+
         // Online buttons
         $('#create-room-btn').addEventListener('click', createRoom);
         $('#join-room-btn').addEventListener('click', joinRoom);
@@ -83,7 +96,6 @@
         $('#copy-code-btn').addEventListener('click', copyRoomCode);
         disconnectBtn.addEventListener('click', disconnect);
 
-        // Enter key on room code input
         $('#room-code-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') joinRoom();
         });
@@ -106,10 +118,7 @@
 
     // ===== Mode =====
     function setMode(newMode) {
-        // Clean up online if leaving
-        if (mode === 'online' && newMode !== 'online') {
-            disconnect();
-        }
+        if (mode === 'online' && newMode !== 'online') disconnect();
 
         mode = newMode;
         $$('.mode-btn').forEach((b) => b.classList.remove('active'));
@@ -123,16 +132,45 @@
         } else {
             onlinePanel.classList.add('hidden');
             disconnectBtn.classList.add('hidden');
-            footerEl.textContent = newMode === 'ai' ? 'You are X • AI is O' : 'Player 1 is X • Player 2 is O';
+            updateFooter();
         }
 
         resetGame();
     }
 
+    // ===== Variant =====
+    function setVariant(v) {
+        variant = v;
+        $$('.variant-btn').forEach((b) => b.classList.remove('active'));
+        $(`#var-${v}`).classList.add('active');
+
+        // Sync variant to online opponent
+        if (mode === 'online' && conn) {
+            conn.send({ type: 'variant', variant: v });
+        }
+
+        updateFooter();
+        resetGame();
+    }
+
+    function updateFooter() {
+        const varLabel = variant === 'infinite' ? ' (Infinite)' : '';
+        if (mode === 'ai') {
+            footerEl.textContent = 'You are X • AI is O' + varLabel;
+        } else if (mode === '2p') {
+            footerEl.textContent = 'Player 1 is X • Player 2 is O' + varLabel;
+        } else {
+            footerEl.textContent = 'Online multiplayer' + varLabel;
+        }
+    }
+
     // ===== Cell Click =====
     function handleCellClick(cell) {
         const idx = parseInt(cell.dataset.index);
-        if (!gameActive || board[idx] !== null || aiThinking) return;
+        if (!gameActive || aiThinking) return;
+
+        // In infinite mode you CAN click an occupied cell only if it's empty
+        if (board[idx] !== null) return;
 
         if (mode === 'online') {
             if (!conn || currentPlayer !== myMark) return;
@@ -147,20 +185,34 @@
         if (mode === 'ai' && gameActive && currentPlayer === 'O') {
             aiThinking = true;
             setTimeout(() => {
-                const aiMove = getBestMove();
-                if (aiMove !== -1) makeMove(aiMove);
+                const aiMove = variant === 'infinite' ? getInfiniteAIMove() : getBestMove();
+                if (aiMove !== -1) {
+                    makeMove(aiMove);
+                    if (mode === 'online' && conn) conn.send({ type: 'move', index: aiMove });
+                }
                 aiThinking = false;
             }, 350);
         }
     }
 
     function makeMove(idx) {
+        // === Infinite variant: remove oldest mark if player already has MAX_MARKS ===
+        if (variant === 'infinite' && moveHistory[currentPlayer].length >= MAX_MARKS) {
+            const oldestIdx = moveHistory[currentPlayer].shift();
+            vanishCell(oldestIdx);
+        }
+
         board[idx] = currentPlayer;
+        moveHistory[currentPlayer].push(idx);
+
         const cell = cells[idx];
         cell.textContent = currentPlayer;
         cell.classList.add(currentPlayer.toLowerCase(), 'taken');
 
         if (window.NeonSFX) NeonSFX.place();
+
+        // Update fading indicators for infinite mode
+        if (variant === 'infinite') updateFadingIndicators();
 
         const winCombo = checkWin(currentPlayer);
         if (winCombo) {
@@ -168,13 +220,45 @@
             return;
         }
 
-        if (board.every((c) => c !== null)) {
+        // In classic mode, check for draw
+        if (variant === 'classic' && board.every((c) => c !== null)) {
             endGame(null, null);
             return;
         }
+        // In infinite mode, no draws are possible
 
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
         updateStatus();
+
+        // Update fading for next player
+        if (variant === 'infinite') updateFadingIndicators();
+    }
+
+    function vanishCell(idx) {
+        const cell = cells[idx];
+        cell.classList.add('vanish');
+        // After animation, clear the cell
+        setTimeout(() => {
+            board[idx] = null;
+            cell.textContent = '';
+            cell.className = 'cell';
+        }, 350);
+        // Clear immediately for board logic
+        board[idx] = null;
+    }
+
+    function updateFadingIndicators() {
+        // In infinite mode, show which mark will vanish next (oldest)
+        // Remove all fading classes first
+        cells.forEach((c) => c.classList.remove('fading'));
+
+        ['X', 'O'].forEach((player) => {
+            if (moveHistory[player].length >= MAX_MARKS) {
+                const oldestIdx = moveHistory[player][0];
+                const oldestCell = cells[oldestIdx];
+                if (oldestCell) oldestCell.classList.add('fading');
+            }
+        });
     }
 
     // ===== Win Check =====
@@ -192,8 +276,7 @@
         if (winner) {
             scores[winner]++;
             if (mode === 'online') {
-                const youWon = winner === myMark;
-                statusText.textContent = youWon ? 'You win! 🎉' : 'You lose!';
+                statusText.textContent = winner === myMark ? 'You win! 🎉' : 'You lose!';
             } else {
                 statusText.textContent = `${winner} wins!`;
             }
@@ -222,7 +305,7 @@
         winLineEl.classList.add('animate');
     }
 
-    // ===== AI (Minimax) =====
+    // ===== AI (Classic — Minimax) =====
     function getBestMove() {
         let bestScore = -Infinity;
         let bestMove = -1;
@@ -267,6 +350,86 @@
         }
     }
 
+    // ===== AI (Infinite — Strategic Heuristic) =====
+    function getInfiniteAIMove() {
+        const emptyCells = [];
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === null) emptyCells.push(i);
+        }
+        if (emptyCells.length === 0) return -1;
+
+        // Simulate each possible move and score it
+        let bestScore = -Infinity;
+        let bestMove = emptyCells[0];
+
+        for (const idx of emptyCells) {
+            const score = evaluateInfiniteMove(idx);
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = idx;
+            }
+        }
+
+        return bestMove;
+    }
+
+    function evaluateInfiniteMove(idx) {
+        // Simulate placing the mark
+        const simBoard = [...board];
+        const simHistory = { X: [...moveHistory.X], O: [...moveHistory.O] };
+
+        // If AI already has MAX_MARKS, oldest vanishes
+        if (simHistory.O.length >= MAX_MARKS) {
+            const oldest = simHistory.O.shift();
+            simBoard[oldest] = null;
+        }
+
+        simBoard[idx] = 'O';
+        simHistory.O.push(idx);
+
+        let score = 0;
+
+        // Score 1: Does this move win?
+        for (const combo of WIN_COMBOS) {
+            if (combo.every((i) => simBoard[i] === 'O')) return 1000;
+        }
+
+        // Score 2: Does this block opponent from winning next turn?
+        // Simulate X's next move
+        for (const combo of WIN_COMBOS) {
+            const xInCombo = combo.filter((i) => simBoard[i] === 'X').length;
+            const emptyInCombo = combo.filter((i) => simBoard[i] === null).length;
+            if (xInCombo === 2 && emptyInCombo === 1) score += 50; // blocking
+        }
+
+        // Score 3: How many combos do we have 2 in?
+        for (const combo of WIN_COMBOS) {
+            const oInCombo = combo.filter((i) => simBoard[i] === 'O').length;
+            const emptyInCombo = combo.filter((i) => simBoard[i] === null).length;
+            if (oInCombo === 2 && emptyInCombo >= 1) score += 30;
+            if (oInCombo === 1 && emptyInCombo >= 2) score += 5;
+        }
+
+        // Score 4: Center is valuable
+        if (idx === 4) score += 15;
+        // Corners are valuable
+        if ([0, 2, 6, 8].includes(idx)) score += 8;
+
+        // Score 5: Penalty — does our oldest mark being removed hurt us?
+        // Check if the removed mark was part of a useful line
+        if (moveHistory.O.length >= MAX_MARKS) {
+            const removedIdx = moveHistory.O[0];
+            for (const combo of WIN_COMBOS) {
+                if (combo.includes(removedIdx)) {
+                    const oInCombo = combo.filter((i) => board[i] === 'O').length;
+                    if (oInCombo >= 2) score -= 20; // losing a good position
+                }
+            }
+        }
+
+        return score;
+    }
+
     // ===== Reset =====
     function handleReset() {
         if (mode === 'online' && conn) {
@@ -282,6 +445,7 @@
         currentPlayer = 'X';
         gameActive = true;
         aiThinking = false;
+        moveHistory = { X: [], O: [] };
 
         cells.forEach((cell) => {
             cell.textContent = '';
@@ -306,23 +470,24 @@
 
     // ===== UI =====
     function updateStatus() {
+        const infLabel = variant === 'infinite' ? ' ♾️' : '';
         if (mode === 'online') {
             if (!conn) {
                 statusText.textContent = 'Waiting for opponent...';
                 statusEl.className = '';
             } else if (currentPlayer === myMark) {
-                statusText.textContent = 'Your turn (' + myMark + ')';
+                statusText.textContent = 'Your turn (' + myMark + ')' + infLabel;
                 statusEl.className = myMark === 'X' ? 'x-turn' : 'o-turn';
             } else {
-                statusText.textContent = "Opponent's turn";
+                statusText.textContent = "Opponent's turn" + infLabel;
                 statusEl.className = currentPlayer === 'X' ? 'x-turn' : 'o-turn';
             }
         } else if (mode === 'ai') {
-            const label = currentPlayer === 'X' ? "Your turn (X)" : "AI thinking...";
-            statusText.textContent = label;
+            const label = currentPlayer === 'X' ? 'Your turn (X)' : 'AI thinking...';
+            statusText.textContent = label + infLabel;
             statusEl.className = currentPlayer === 'X' ? 'x-turn' : 'o-turn';
         } else {
-            statusText.textContent = `${currentPlayer}'s turn`;
+            statusText.textContent = `${currentPlayer}'s turn` + infLabel;
             statusEl.className = currentPlayer === 'X' ? 'x-turn' : 'o-turn';
         }
     }
@@ -369,7 +534,6 @@
         disconnectBtn.classList.remove('hidden');
     }
 
-    // ===== Create Room (Host) =====
     function createRoom() {
         if (window.NeonSFX) NeonSFX.click();
         isHost = true;
@@ -378,12 +542,9 @@
 
         showWaiting('Creating room...');
 
-        // Destroy old peer if any
         if (peer) peer.destroy();
 
-        peer = new Peer(PEER_PREFIX + roomCode, {
-            debug: 0,
-        });
+        peer = new Peer(PEER_PREFIX + roomCode, { debug: 0 });
 
         peer.on('open', () => {
             waitingText.textContent = 'Waiting for opponent...';
@@ -395,6 +556,8 @@
         peer.on('connection', (c) => {
             conn = c;
             setupConnection();
+            // Send current variant to the joining player
+            conn.send({ type: 'variant', variant: variant });
         });
 
         peer.on('error', (err) => {
@@ -411,7 +574,6 @@
         });
     }
 
-    // ===== Join Room (Guest) =====
     function joinRoom() {
         const input = $('#room-code-input').value.trim().toUpperCase();
         if (!input || input.length < 3) return;
@@ -431,9 +593,7 @@
 
         peer.on('open', () => {
             conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
-            conn.on('open', () => {
-                setupConnection();
-            });
+            conn.on('open', () => setupConnection());
             conn.on('error', () => {
                 waitingText.textContent = 'Room not found. Check code.';
             });
@@ -461,16 +621,18 @@
                 }
             } else if (data.type === 'reset') {
                 resetGame();
+            } else if (data.type === 'variant') {
+                // Sync variant from host
+                variant = data.variant;
+                $$('.variant-btn').forEach((b) => b.classList.remove('active'));
+                $(`#var-${data.variant}`).classList.add('active');
+                updateFooter();
+                resetGame();
             }
         });
 
-        conn.on('close', () => {
-            handleDisconnect();
-        });
-
-        conn.on('error', () => {
-            handleDisconnect();
-        });
+        conn.on('close', () => handleDisconnect());
+        conn.on('error', () => handleDisconnect());
     }
 
     function handleDisconnect() {
@@ -485,10 +647,7 @@
 
     function cancelOnline() {
         if (window.NeonSFX) NeonSFX.click();
-        if (peer) {
-            peer.destroy();
-            peer = null;
-        }
+        if (peer) { peer.destroy(); peer = null; }
         conn = null;
         showLobby();
     }
@@ -496,10 +655,7 @@
     function disconnect() {
         if (window.NeonSFX) NeonSFX.click();
         if (conn) conn.close();
-        if (peer) {
-            peer.destroy();
-            peer = null;
-        }
+        if (peer) { peer.destroy(); peer = null; }
         conn = null;
         showLobby();
         disconnectBtn.classList.add('hidden');
@@ -512,7 +668,6 @@
             btn.textContent = '✅';
             setTimeout(() => { btn.textContent = '📋'; }, 1500);
         }).catch(() => {
-            // Fallback: select and copy
             const el = document.createElement('textarea');
             el.value = roomCode;
             document.body.appendChild(el);
