@@ -1,0 +1,375 @@
+/* ===== Design Tokens ===== */
+:root {
+    --bg-primary: #0a0a1a;
+    --bg-secondary: #12122a;
+    --bg-card: rgba(18, 18, 42, 0.85);
+    --neon-green: #00ff88;
+    --neon-green-dim: #00cc6a;
+    --neon-pink: #ff2d75;
+    --neon-blue: #00d4ff;
+    --neon-purple: #b44dff;
+    --neon-yellow: #ffe600;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888aa;
+    --glow-green: 0 0 10px rgba(0, 255, 136, 0.5), 0 0 30px rgba(0, 255, 136, 0.2);
+    --glow-pink: 0 0 10px rgba(255, 45, 117, 0.5), 0 0 30px rgba(255, 45, 117, 0.2);
+    --border-radius: 12px;
+    --canvas-size: min(500px, 90vw);
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Animated background */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(0, 255, 136, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(180, 77, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+    z-index: 0;
+    animation: bgPulse 8s ease-in-out infinite alternate;
+}
+
+@keyframes bgPulse {
+    0% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* ===== App Layout ===== */
+#app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+}
+
+/* ===== Header ===== */
+#header {
+    text-align: center;
+}
+
+#title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    letter-spacing: 0.15em;
+    background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+    animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+    0% { filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3)); }
+    100% { filter: drop-shadow(0 0 35px rgba(0, 255, 136, 0.5)); }
+}
+
+#subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 400;
+    font-size: 0.75rem;
+    letter-spacing: 0.5em;
+    color: var(--neon-purple);
+    margin-top: 2px;
+}
+
+/* ===== Game Container ===== */
+#game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ===== Stats Bar ===== */
+#stats-bar {
+    display: flex;
+    gap: 24px;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 255, 136, 0.15);
+    border-radius: var(--border-radius);
+    padding: 10px 28px;
+    box-shadow: var(--glow-green);
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.stat-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--neon-green);
+    text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+    min-width: 50px;
+    text-align: center;
+}
+
+#highscore-display .stat-value {
+    color: var(--neon-yellow);
+    text-shadow: 0 0 8px rgba(255, 230, 0, 0.5);
+}
+
+#length-display .stat-value {
+    color: var(--neon-blue);
+    text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+}
+
+/* ===== Canvas Wrapper ===== */
+#canvas-wrapper {
+    position: relative;
+    width: var(--canvas-size);
+    height: var(--canvas-size);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    border: 2px solid rgba(0, 255, 136, 0.2);
+    box-shadow:
+        var(--glow-green),
+        inset 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-secondary);
+}
+
+/* ===== Overlay Screens ===== */
+.overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 10, 26, 0.88);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+    animation: fadeIn 0.3s ease;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.overlay-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.overlay-icon {
+    font-size: 3.5rem;
+    animation: iconBounce 2s ease-in-out infinite;
+}
+
+@keyframes iconBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.overlay-content h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.overlay-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.final-score-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    color: var(--neon-green) !important;
+}
+
+.new-best {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--neon-yellow) !important;
+    text-shadow: 0 0 10px rgba(255, 230, 0, 0.5);
+    animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+kbd {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    color: var(--text-primary);
+    margin: 0 2px;
+}
+
+/* ===== Neon Button ===== */
+.neon-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    padding: 14px 40px;
+    border: 2px solid var(--neon-green);
+    border-radius: 50px;
+    background: transparent;
+    color: var(--neon-green);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--glow-green);
+    text-transform: uppercase;
+    margin-top: 6px;
+}
+
+.neon-btn:hover {
+    background: var(--neon-green);
+    color: var(--bg-primary);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 60px rgba(0, 255, 136, 0.3);
+    transform: translateY(-2px);
+}
+
+.neon-btn:active {
+    transform: translateY(0);
+}
+
+/* ===== Mobile Controls ===== */
+#mobile-controls {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.controls-row {
+    display: flex;
+    gap: 6px;
+}
+
+.ctrl-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    border: 1px solid rgba(0, 255, 136, 0.25);
+    background: var(--bg-card);
+    color: var(--neon-green);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.ctrl-btn:active {
+    background: rgba(0, 255, 136, 0.15);
+    box-shadow: var(--glow-green);
+    transform: scale(0.92);
+}
+
+.mobile-hint {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    display: none;
+}
+
+/* ===== Footer ===== */
+#footer {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+    #mobile-controls {
+        display: flex;
+    }
+
+    .mobile-hint {
+        display: block;
+    }
+
+    #footer {
+        display: none;
+    }
+
+    :root {
+        --canvas-size: min(360px, 88vw);
+    }
+
+    #stats-bar {
+        padding: 8px 18px;
+        gap: 16px;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    :root {
+        --canvas-size: min(300px, 85vw);
+    }
+
+    .ctrl-btn {
+        width: 48px;
+        height: 48px;
+    }
+}

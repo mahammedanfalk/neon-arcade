@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Neon Arcade — A collection of retro-inspired browser games with stunning neon aesthetics.">
+    <title>Neon Arcade — Game Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="menu.css">
+</head>
+
+<body>
+    <div id="bg-grid"></div>
+
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div id="logo-wrapper">
+                <div id="logo-icon">🕹️</div>
+                <div>
+                    <h1 id="title">NEON ARCADE</h1>
+                    <p id="tagline">RETRO GAMES • MODERN VIBES</p>
+                </div>
+            </div>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound"
+                style="background:none;border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:6px 12px;font-size:1rem;cursor:pointer;color:#00ff88;font-family:'Orbitron',sans-serif;display:flex;align-items:center;gap:6px;transition:all 0.3s;margin-top:12px;">
+                <span id="mute-icon">🔊</span><span style="font-size:0.55rem;letter-spacing:0.1em;">SFX</span>
+            </button>
+        </header>
+
+        <!-- Available Games -->
+        <section id="games-section">
+            <h2 class="section-title">
+                <span class="section-icon">🎮</span> Available Games
+            </h2>
+            <div id="games-grid">
+                <!-- Snake -->
+                <a href="snake-game/index.html" class="game-card playable" id="card-snake">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-live">PLAY NOW</div>
+                    <div class="card-icon">🐍</div>
+                    <h3 class="card-title">Snake</h3>
+                    <p class="card-desc">Guide the neon serpent, eat to grow, don't hit the walls!</p>
+                    <div class="card-tags">
+                        <span class="tag tag-arcade">Arcade</span>
+                        <span class="tag tag-classic">Classic</span>
+                    </div>
+                    <div class="card-play-hint">
+                        <span class="play-arrow">▶</span> Click to Play
+                    </div>
+                </a>
+
+                <!-- Tic-Tac-Toe -->
+                <a href="tic-tac-toe/index.html" class="game-card playable" id="card-ttt">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-live">PLAY NOW</div>
+                    <div class="card-icon">❌⭕</div>
+                    <h3 class="card-title">Tic-Tac-Toe</h3>
+                    <p class="card-desc">Classic X vs O — challenge the AI or duel a friend locally.</p>
+                    <div class="card-tags">
+                        <span class="tag tag-puzzle">Puzzle</span>
+                        <span class="tag tag-strategy">Strategy</span>
+                    </div>
+                    <div class="card-play-hint">
+                        <span class="play-arrow">▶</span> Click to Play
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- Coming Soon Games -->
+        <section id="coming-section">
+            <h2 class="section-title">
+                <span class="section-icon">🚀</span> Coming Soon
+            </h2>
+            <div id="coming-grid">
+                <!-- Tetris -->
+                <div class="game-card locked" id="card-tetris">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-soon">COMING SOON</div>
+                    <div class="card-icon">🧱</div>
+                    <h3 class="card-title">Tetris</h3>
+                    <p class="card-desc">Stack falling neon blocks — clear lines, chase combos, survive the speed.</p>
+                    <div class="card-tags">
+                        <span class="tag tag-puzzle">Puzzle</span>
+                        <span class="tag tag-classic">Classic</span>
+                    </div>
+                    <div class="card-lock">🔒</div>
+                </div>
+
+                <!-- Pong -->
+                <div class="game-card locked" id="card-pong">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-soon">COMING SOON</div>
+                    <div class="card-icon">🏓</div>
+                    <h3 class="card-title">Pong</h3>
+                    <p class="card-desc">The OG arcade duel. Neon paddles, glowing ball — play solo or vs AI.</p>
+                    <div class="card-tags">
+                        <span class="tag tag-arcade">Arcade</span>
+                        <span class="tag tag-multiplayer">2-Player</span>
+                    </div>
+                    <div class="card-lock">🔒</div>
+                </div>
+
+                <!-- Breakout -->
+                <div class="game-card locked" id="card-breakout">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-soon">COMING SOON</div>
+                    <div class="card-icon">💥</div>
+                    <h3 class="card-title">Breakout</h3>
+                    <p class="card-desc">Smash neon bricks with a bouncing beam. Powerups, combos, and chaos.</p>
+                    <div class="card-tags">
+                        <span class="tag tag-arcade">Arcade</span>
+                        <span class="tag tag-action">Action</span>
+                    </div>
+                    <div class="card-lock">🔒</div>
+                </div>
+
+                <!-- Space Invaders -->
+                <div class="game-card locked" id="card-invaders">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-soon">COMING SOON</div>
+                    <div class="card-icon">👾</div>
+                    <h3 class="card-title">Space Invaders</h3>
+                    <p class="card-desc">Defend Earth from waves of neon aliens. Shoot fast, dodge faster.</p>
+                    <div class="card-tags">
+                        <span class="tag tag-arcade">Arcade</span>
+                        <span class="tag tag-shooter">Shooter</span>
+                    </div>
+                    <div class="card-lock">🔒</div>
+                </div>
+
+                <!-- 2048 -->
+                <div class="game-card locked" id="card-2048">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-soon">COMING SOON</div>
+                    <div class="card-icon">🔢</div>
+                    <h3 class="card-title">2048</h3>
+                    <p class="card-desc">Slide and merge glowing tiles. Simple to learn, impossible to master.</p>
+                    <div class="card-tags">
+                        <span class="tag tag-puzzle">Puzzle</span>
+                        <span class="tag tag-strategy">Strategy</span>
+                    </div>
+                    <div class="card-lock">🔒</div>
+                </div>
+
+                <!-- Memory Match -->
+                <div class="game-card locked" id="card-memory">
+                    <div class="card-glow"></div>
+                    <div class="card-badge badge-soon">COMING SOON</div>
+                    <div class="card-icon">🃏</div>
+                    <h3 class="card-title">Memory Match</h3>
+                    <p class="card-desc">Flip neon cards and find matching pairs. Test your memory under pressure.</p>
+                    <div class="card-tags">
+                        <span class="tag tag-puzzle">Puzzle</span>
+                        <span class="tag tag-casual">Casual</span>
+                    </div>
+                    <div class="card-lock">🔒</div>
+                </div>
+            </div>
+        </section>
+
+        <footer id="footer">
+            <p>Built with 💚 • Neon Arcade &copy; 2026</p>
+        </footer>
+    </div>
+
+    <script src="sfx.js"></script>
+    <script src="menu.js"></script>
+</body>
+
+</html>

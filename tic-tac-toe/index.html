@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Neon Tic-Tac-Toe — Play X vs O with glowing visuals and AI opponent.">
+    <title>Tic-Tac-Toe — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link">
+                <span>←</span> BACK TO ARCADE
+            </a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">TIC-TAC-TOE</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <!-- Mode selector -->
+        <div id="mode-selector">
+            <button class="mode-btn active" id="mode-ai" data-mode="ai">
+                <span class="mode-icon">🤖</span> vs AI
+            </button>
+            <button class="mode-btn" id="mode-2p" data-mode="2p">
+                <span class="mode-icon">👥</span> vs Friend
+            </button>
+        </div>
+
+        <!-- Scoreboard -->
+        <div id="scoreboard">
+            <div class="score-item" id="score-x">
+                <span class="score-mark x-color">X</span>
+                <span class="score-val" id="wins-x">0</span>
+            </div>
+            <div class="score-item" id="score-draw">
+                <span class="score-mark draw-color">—</span>
+                <span class="score-val" id="draws">0</span>
+            </div>
+            <div class="score-item" id="score-o">
+                <span class="score-mark o-color">O</span>
+                <span class="score-val" id="wins-o">0</span>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div id="status">
+            <span id="status-text">X's turn</span>
+        </div>
+
+        <!-- Board -->
+        <div id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+            <!-- Win line overlay -->
+            <svg id="win-line" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                <line id="win-line-el" x1="0" y1="0" x2="0" y2="0" />
+            </svg>
+        </div>
+
+        <!-- Reset -->
+        <button id="reset-btn" class="neon-btn">NEW GAME</button>
+        <button id="reset-scores-btn" class="ghost-btn">Reset Scores</button>
+
+        <footer id="footer">
+            <p>You are X • AI / Player 2 is O</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
