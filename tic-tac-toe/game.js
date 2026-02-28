@@ -555,9 +555,13 @@
 
         peer.on('connection', (c) => {
             conn = c;
-            setupConnection();
-            // Send current variant to the joining player
-            conn.send({ type: 'variant', variant: variant });
+            // Wait for data channel to be fully open before setup + sending
+            conn.on('open', () => {
+                setupConnection();
+                // Sync current variant to the joining player
+                conn.send({ type: 'variant', variant: variant });
+            });
+            conn.on('error', () => handleDisconnect());
         });
 
         peer.on('error', (err) => {
