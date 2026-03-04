@@ -27,6 +27,8 @@ body {
     align-items: center;
     justify-content: center;
     overflow-x: hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
 }
 
 body::before {
