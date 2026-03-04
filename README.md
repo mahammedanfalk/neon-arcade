@@ -14,7 +14,7 @@ A collection of retro-inspired browser games with stunning neon aesthetics.
 | 🏓 Pong | ✅ Playable | Neon paddles and glowing ball — play solo or vs a friend |
 | 💥 Breakout | ✅ Playable | Smash neon bricks with powerups, combos, and chaos |
 | 👾 Space Invaders | ✅ Playable | Defend Earth from waves of neon aliens |
-| 🔢 2048 | 🔒 Coming Soon | |
+| 🔢 2048 | ✅ Playable | Slide and merge glowing tiles to reach 2048 |
 | 🃏 Memory Match | 🔒 Coming Soon | |
 
 ## ✨ Features

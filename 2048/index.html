@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Neon 2048 — Slide and merge glowing tiles. Simple to learn, impossible to master.">
+    <title>2048 — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link"><span>←</span> BACK TO ARCADE</a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">2048</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">SCORE</span>
+                <span class="hud-value" id="score-val">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">BEST</span>
+                <span class="hud-value" id="high-val">0</span>
+            </div>
+        </div>
+
+        <div id="grid-container">
+            <div id="grid"></div>
+        </div>
+
+        <div id="overlay">
+            <div id="overlay-content">
+                <div id="overlay-icon">🔢</div>
+                <h2 id="overlay-title">Ready to Merge?</h2>
+                <p id="overlay-info">
+                    <span class="key">←</span> <span class="key">→</span> <span class="key">↑</span> <span
+                        class="key">↓</span> — Slide Tiles
+                    <br>Swipe on mobile
+                </p>
+                <button id="play-btn" class="neon-btn">START GAME</button>
+            </div>
+        </div>
+
+        <div id="new-game-wrap">
+            <button id="new-game-btn" class="neon-btn-small">NEW GAME</button>
+        </div>
+
+        <div id="controls-hint"><span>Merge tiles to reach <strong style="color:#ffe600">2048</strong></span></div>
+        <footer id="footer">
+            <p>Slide tiles, merge numbers, chase the highest tile</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
