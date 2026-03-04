@@ -8,14 +8,19 @@ A collection of retro-inspired browser games with stunning neon aesthetics.
 
 | Game | Status | Description |
 |------|--------|-------------|
-| 🐍 Snake | ✅ Playable | Classic snake with neon glow, particles, and increasing speed |
-| ❌⭕ Tic-Tac-Toe | ✅ Playable | X vs O with unbeatable AI or local 2-player mode |
-| 🧱 Tetris | ✅ Playable | Stack falling neon blocks, clear lines, chase combos |
-| 🏓 Pong | ✅ Playable | Neon paddles and glowing ball — play solo or vs a friend |
+| 🐍 Snake | ✅ Playable | Classic snake with neon glow, particles, and swipe controls |
+| ❌⭕ Tic-Tac-Toe | ✅ Playable | X vs O with unbeatable AI, local 2P, or online multiplayer |
+| 🧱 Tetris | ✅ Playable | Stack falling neon blocks, clear lines, swipe/tap mobile controls |
+| 🏓 Pong | ✅ Playable | Neon paddles — vertical on mobile, horizontal on desktop |
 | 💥 Breakout | ✅ Playable | Smash neon bricks with powerups, combos, and chaos |
-| 👾 Space Invaders | ✅ Playable | Defend Earth from waves of neon aliens |
+| 👾 Space Invaders | ✅ Playable | Defend Earth from neon aliens — drag + auto-fire on mobile |
 | 🔢 2048 | ✅ Playable | Slide and merge glowing tiles to reach 2048 |
-| 🃏 Memory Match | 🔒 Coming Soon | |
+| 🃏 Memory Match | ✅ Playable | Flip neon cards — solo, 2-player, or online multiplayer |
+| 🐦 Flappy Bird | ✅ Playable | Tap to flap through neon pipes — one hit and it's over |
+| 💣 Minesweeper | ✅ Playable | Sweep the grid — 3 difficulty modes, flag and clear |
+| 🔴🟡 Connect Four | ✅ Playable | Drop discs to line up 4 — play vs AI or a friend |
+| 🔨 Whack-a-Mole | ✅ Playable | Tap moles with combos and golden moles for big points |
+| 📝 Wordle | ✅ Playable | Guess the 5-letter word in 6 tries — neon style |
 
 ## ✨ Features
 
@@ -24,6 +29,7 @@ A collection of retro-inspired browser games with stunning neon aesthetics.
 - Responsive design with mobile touch controls
 - High score persistence via localStorage
 - Animated neon UI with glassmorphism effects
+- Online multiplayer (Memory Match, Tic-Tac-Toe) via PeerJS
 
 ## 🚀 Run Locally
 
