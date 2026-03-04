@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Neon Connect Four — Drop discs in the grid. Line up four to win against AI or a friend.">
+    <title>Connect Four — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link"><span>←</span> BACK TO ARCADE</a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">CONNECT FOUR</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <!-- Mode selector -->
+        <div id="mode-selector">
+            <button class="mode-btn active" id="mode-ai" data-mode="ai">
+                <span class="mode-icon">🤖</span> vs AI
+            </button>
+            <button class="mode-btn" id="mode-2p" data-mode="2p">
+                <span class="mode-icon">👥</span> 2 Player
+            </button>
+        </div>
+
+        <div id="status-bar">
+            <span id="status-text">Your turn</span>
+        </div>
+
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label" id="p1-label">YOU</span>
+                <span class="hud-value p1-color" id="p1-score">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">DRAWS</span>
+                <span class="hud-value" id="draws">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label" id="p2-label">AI</span>
+                <span class="hud-value p2-color" id="p2-score">0</span>
+            </div>
+        </div>
+
+        <div id="board-wrapper">
+            <div id="column-indicators"></div>
+            <div id="board"></div>
+        </div>
+
+        <button id="reset-btn" class="neon-btn-sm">NEW GAME</button>
+
+        <div id="controls-hint"><span>Click a column to drop your disc</span></div>
+        <footer id="footer">
+            <p>Line up four to win!</p>
+            <p style="margin-top:6px;font-size:0.75rem;opacity:0.6;">Created by Mahammed Anfal Kurka</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
