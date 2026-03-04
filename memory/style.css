@@ -326,18 +326,57 @@ body::before {
     font-size: 0.85rem;
 }
 
+/* ===== Difficulty Selector ===== */
+#diff-selector {
+    display: flex;
+    gap: 8px;
+}
+
+.diff-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    padding: 6px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: var(--transition);
+    line-height: 1.4;
+    text-align: center;
+}
+
+.diff-btn:hover {
+    border-color: rgba(0, 255, 136, 0.2);
+    color: var(--text-primary);
+}
+
+.diff-btn.active {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    background: rgba(0, 255, 136, 0.08);
+}
+
+.diff-detail {
+    font-size: 0.4rem;
+    opacity: 0.6;
+    font-family: 'Inter', sans-serif;
+}
+
 /* ===== Board ===== */
 #board {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
     perspective: 600px;
 }
 
 .memory-card {
-    aspect-ratio: 1;
+    width: var(--card-w, 80px);
+    height: var(--card-h, 96px);
     position: relative;
     cursor: pointer;
     transform-style: preserve-3d;
@@ -539,10 +578,27 @@ body::before {
     color: var(--text-muted);
 }
 
-@media (max-width: 400px) {
+@media (max-width: 520px) {
+
+    html,
     body {
-        overflow-y: auto;
+        overflow: hidden;
+        overscroll-behavior: none;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
         align-items: flex-start;
+    }
+
+    #app {
+        padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 20px));
+        gap: 6px;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     #board {
@@ -550,35 +606,29 @@ body::before {
     }
 
     .card-face-back {
-        font-size: 1.5rem;
+        font-size: var(--card-font, 1.5rem);
     }
 
     .card-face-front::after {
-        font-size: 1.1rem;
+        font-size: var(--card-font, 1.1rem);
     }
 
     #hud {
-        padding: 8px 14px;
+        padding: 6px 12px;
         gap: 8px;
     }
 
     .hud-value {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
     }
 
-    #app {
-        padding: 12px;
-        gap: 10px;
-    }
-}
-
-@media (max-width: 320px) {
-    #board {
-        gap: 4px;
-        max-width: 280px;
+    #footer {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+        font-size: 0.55rem;
     }
 
-    .card-face-back {
-        font-size: 1.2rem;
+    .diff-btn {
+        padding: 5px 10px;
+        font-size: 0.4rem;
     }
 }

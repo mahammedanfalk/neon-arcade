@@ -31,7 +31,7 @@
     const yourMarkEl = document.getElementById('your-mark');
     const disconnectBtn = document.getElementById('disconnect-btn');
 
-    const SYMBOLS = ['🚀', '⚡', '🎮', '💎', '🌟', '🔥', '🎵', '👾'];
+    const ALL_SYMBOLS = ['🚀', '⚡', '🎮', '💎', '🌟', '🔥', '🎵', '👾', '🎯', '🌈'];
     const COLORS = [
         { bg: 'rgba(0, 212, 255, 0.15)', border: 'rgba(0, 212, 255, 0.35)', glow: 'rgba(0, 212, 255, 0.2)' },
         { bg: 'rgba(255, 230, 0, 0.15)', border: 'rgba(255, 230, 0, 0.35)', glow: 'rgba(255, 230, 0, 0.2)' },
@@ -41,9 +41,18 @@
         { bg: 'rgba(255, 138, 0, 0.15)', border: 'rgba(255, 138, 0, 0.35)', glow: 'rgba(255, 138, 0, 0.2)' },
         { bg: 'rgba(0, 255, 229, 0.15)', border: 'rgba(0, 255, 229, 0.35)', glow: 'rgba(0, 255, 229, 0.2)' },
         { bg: 'rgba(255, 255, 255, 0.1)', border: 'rgba(255, 255, 255, 0.25)', glow: 'rgba(255, 255, 255, 0.15)' },
+        { bg: 'rgba(255, 80, 80, 0.15)', border: 'rgba(255, 80, 80, 0.35)', glow: 'rgba(255, 80, 80, 0.2)' },
+        { bg: 'rgba(120, 255, 120, 0.15)', border: 'rgba(120, 255, 120, 0.35)', glow: 'rgba(120, 255, 120, 0.2)' },
     ];
 
-    const TOTAL_PAIRS = SYMBOLS.length;
+    const DIFF_CONFIG = {
+        easy: { pairs: 6, cols: 3, rows: 4 },
+        medium: { pairs: 8, cols: 4, rows: 4 },
+        hard: { pairs: 10, cols: 5, rows: 4 },
+    };
+
+    let memDifficulty = 'medium';
+    let TOTAL_PAIRS = DIFF_CONFIG[memDifficulty].pairs;
     const PEER_PREFIX = 'neonarcade-mm-';
 
     // ===== State =====
@@ -55,7 +64,21 @@
     let startTime = 0;
     let gameRunning = false;
     let locked = false;
-    let bestMoves = parseInt(localStorage.getItem('memory-best') || '0', 10);
+    let bestMoves = parseInt(localStorage.getItem(`memory-best-${memDifficulty}`) || '0', 10);
+
+    // ===== Difficulty selector =====
+    document.querySelectorAll('#diff-selector .diff-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (window.NeonSFX) NeonSFX.click();
+            document.querySelectorAll('#diff-selector .diff-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            memDifficulty = btn.dataset.diff;
+            TOTAL_PAIRS = DIFF_CONFIG[memDifficulty].pairs;
+            bestMoves = parseInt(localStorage.getItem(`memory-best-${memDifficulty}`) || '0', 10);
+            bestEl.textContent = bestMoves > 0 ? bestMoves : '—';
+            startGame();
+        });
+    });
 
     // Mode state
     let gameMode = 'solo'; // 'solo' | '2p' | 'online'
@@ -139,10 +162,25 @@
     // ===== Build Board =====
     function buildBoard(order) {
         board.innerHTML = '';
+        const cfg = DIFF_CONFIG[memDifficulty];
+        const gridCols = cfg.cols;
+        board.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
+
+        // Dynamic card sizing
+        const screenW = window.innerWidth;
+        const boardPad = 24;
+        const gap = 8;
+        const availW = Math.min(screenW - boardPad, 500 - boardPad);
+        const cardW = Math.min(80, Math.floor((availW - gap * (gridCols - 1)) / gridCols));
+        board.style.setProperty('--card-w', cardW + 'px');
+        board.style.setProperty('--card-h', (cardW * 1.2) + 'px');
+        board.style.setProperty('--card-font', Math.max(1.2, cardW * 0.035) + 'rem');
+
+        const symbols = ALL_SYMBOLS.slice(0, TOTAL_PAIRS);
         const pairs = [];
         for (let i = 0; i < TOTAL_PAIRS; i++) {
-            pairs.push({ symbol: SYMBOLS[i], colorIndex: i });
-            pairs.push({ symbol: SYMBOLS[i], colorIndex: i });
+            pairs.push({ symbol: symbols[i], colorIndex: i });
+            pairs.push({ symbol: symbols[i], colorIndex: i });
         }
 
         // Use provided order or shuffle
@@ -320,7 +358,7 @@
         if (gameMode === 'solo') {
             if (bestMoves === 0 || moves < bestMoves) {
                 bestMoves = moves;
-                localStorage.setItem('memory-best', bestMoves.toString());
+                localStorage.setItem(`memory-best-${memDifficulty}`, bestMoves.toString());
                 bestEl.textContent = bestMoves;
             }
             if (window.NeonSFX) NeonSFX.win();
