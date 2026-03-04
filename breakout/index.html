@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Neon Breakout — Smash glowing bricks with a bouncing beam. Powerups, combos, and chaos.">
+    <title>Breakout — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link">
+                <span>←</span> BACK TO ARCADE
+            </a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">BREAKOUT</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">SCORE</span>
+                <span class="hud-value" id="score-val">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">LEVEL</span>
+                <span class="hud-value" id="level-val">1</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">LIVES</span>
+                <span class="hud-value" id="lives-val">❤️❤️❤️</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">HIGH</span>
+                <span class="hud-value" id="high-val">0</span>
+            </div>
+        </div>
+
+        <!-- Canvas -->
+        <canvas id="breakout-canvas" width="700" height="500"></canvas>
+
+        <!-- Overlay -->
+        <div id="overlay">
+            <div id="overlay-content">
+                <div id="overlay-icon">💥</div>
+                <h2 id="overlay-title">Ready to Break?</h2>
+                <p id="overlay-info">
+                    <span class="key">←</span> <span class="key">→</span> or <span class="key">Mouse</span> — Move
+                    Paddle
+                    <br>
+                    <span class="key">Space</span> — Launch Ball
+                </p>
+                <button id="play-btn" class="neon-btn">START GAME</button>
+            </div>
+        </div>
+
+        <!-- Touch controls (mobile) -->
+        <div id="touch-controls">
+            <button class="touch-btn" id="touch-left" aria-label="Move Left">◀</button>
+            <button class="touch-btn touch-wide" id="touch-launch" aria-label="Launch">🚀 LAUNCH</button>
+            <button class="touch-btn" id="touch-right" aria-label="Move Right">▶</button>
+        </div>
+
+        <div id="controls-hint">
+            <span>Press <span class="key">P</span> to pause</span>
+        </div>
+
+        <footer id="footer">
+            <p>Smash all the bricks to advance</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
