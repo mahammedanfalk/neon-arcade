@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Neon Minesweeper — Sweep the neon grid. Flag the mines, clear the field.">
+    <title>Minesweeper — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link"><span>←</span> BACK TO ARCADE</a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">MINESWEEPER</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <!-- Difficulty selector -->
+        <div id="diff-selector">
+            <button class="diff-btn active" data-diff="easy">Easy<br><span class="diff-detail">9×9 · 10
+                    mines</span></button>
+            <button class="diff-btn" data-diff="medium">Medium<br><span class="diff-detail">16×16 · 40
+                    mines</span></button>
+            <button class="diff-btn" data-diff="hard">Hard<br><span class="diff-detail">16×30 · 99 mines</span></button>
+        </div>
+
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">MINES</span>
+                <span class="hud-value" id="mines-val">10</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">TIME</span>
+                <span class="hud-value" id="time-val">0:00</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">BEST</span>
+                <span class="hud-value" id="best-val">—</span>
+            </div>
+        </div>
+
+        <div id="board"></div>
+
+        <div id="controls-hint">
+            <span>Click to reveal · Right-click or long-press to flag</span>
+        </div>
+
+        <div id="overlay">
+            <div id="overlay-content">
+                <div id="overlay-icon">💣</div>
+                <h2 id="overlay-title">Minesweeper</h2>
+                <p id="overlay-info">Clear the field without hitting a mine<br>Right-click or long-press to flag</p>
+                <button id="play-btn" class="neon-btn">START GAME</button>
+            </div>
+        </div>
+
+        <footer id="footer">
+            <p>Sweep the neon grid — find every mine</p>
+            <p style="margin-top:6px;font-size:0.75rem;opacity:0.6;">Created by Mahammed Anfal Kurka</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
