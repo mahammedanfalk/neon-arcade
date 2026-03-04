@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Neon Whack-a-Mole — Tap the glowing moles before they hide. Fast reflexes win!">
+    <title>Whack-a-Mole — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link"><span>←</span> BACK TO ARCADE</a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">WHACK-A-MOLE</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">SCORE</span>
+                <span class="hud-value" id="score-val">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">TIME</span>
+                <span class="hud-value" id="time-val">30</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">BEST</span>
+                <span class="hud-value" id="best-val">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">COMBO</span>
+                <span class="hud-value" id="combo-val">×1</span>
+            </div>
+        </div>
+
+        <div id="board">
+            <div class="hole" data-index="0">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="1">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="2">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="3">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="4">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="5">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="6">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="7">
+                <div class="mole">🐹</div>
+            </div>
+            <div class="hole" data-index="8">
+                <div class="mole">🐹</div>
+            </div>
+        </div>
+
+        <div id="overlay">
+            <div id="overlay-content">
+                <div id="overlay-icon">🔨</div>
+                <h2 id="overlay-title">Ready to Whack?</h2>
+                <p id="overlay-info">Tap or click the moles before they hide!<br>30 seconds on the clock. Go!</p>
+                <button id="play-btn" class="neon-btn">START GAME</button>
+            </div>
+        </div>
+
+        <div id="controls-hint"><span>Tap or click the moles — be quick!</span></div>
+        <footer id="footer">
+            <p>Whack as many moles as you can in 30 seconds</p>
+            <p style="margin-top:6px;font-size:0.75rem;opacity:0.6;">Created by Mahammed Anfal Kurka</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
