@@ -166,14 +166,19 @@
         const gridCols = cfg.cols;
         board.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
 
-        // Dynamic card sizing
+        // Dynamic card sizing — perfect squares
         const screenW = window.innerWidth;
+        const screenH = window.innerHeight;
         const boardPad = 24;
         const gap = 8;
+        const rows = cfg.rows;
         const availW = Math.min(screenW - boardPad, 500 - boardPad);
-        const cardW = Math.min(80, Math.floor((availW - gap * (gridCols - 1)) / gridCols));
+        const availH = screenH * 0.52; // leave room for header, HUD, footer
+        const cardFromW = Math.floor((availW - gap * (gridCols - 1)) / gridCols);
+        const cardFromH = Math.floor((availH - gap * (rows - 1)) / rows);
+        const cardW = Math.min(80, cardFromW, cardFromH);
         board.style.setProperty('--card-w', cardW + 'px');
-        board.style.setProperty('--card-h', (cardW * 1.2) + 'px');
+        board.style.setProperty('--card-h', cardW + 'px'); // perfect square
         board.style.setProperty('--card-font', Math.max(1.2, cardW * 0.035) + 'rem');
 
         const symbols = ALL_SYMBOLS.slice(0, TOTAL_PAIRS);
