@@ -1,0 +1,291 @@
+/* ===== Flappy Bird — Neon Edition Styles ===== */
+
+:root {
+    --bg-primary: #060614;
+    --bg-card: rgba(15, 15, 35, 0.85);
+    --text-primary: #e4e4f0;
+    --text-dim: rgba(228, 228, 240, 0.5);
+    --neon-green: #00ff88;
+    --neon-blue: #00d4ff;
+    --neon-pink: #ff2d75;
+    --neon-purple: #b44dff;
+    --neon-yellow: #ffe600;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 50%, rgba(255, 45, 117, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 0%, rgba(180, 77, 255, 0.04) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+#app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 500px;
+    padding: 16px 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Top Bar */
+#top-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#back-link {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--neon-green);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: var(--transition);
+}
+
+#back-link:hover {
+    opacity: 1;
+}
+
+#mute-btn {
+    background: none;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--neon-green);
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+}
+
+.mute-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+}
+
+/* Header */
+#header {
+    text-align: center;
+}
+
+#title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 18px rgba(0, 255, 136, 0.3));
+}
+
+#subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.4em;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+/* HUD */
+#hud {
+    display: flex;
+    gap: 24px;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    padding: 10px 28px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hud-item {
+    text-align: center;
+}
+
+.hud-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    display: block;
+}
+
+.hud-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--neon-green);
+}
+
+/* Canvas */
+#game-canvas {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    max-width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: pointer;
+}
+
+/* Overlay */
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(6, 6, 20, 0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(6px);
+}
+
+#overlay.hidden {
+    display: none;
+}
+
+#overlay-content {
+    text-align: center;
+    padding: 32px 42px;
+    border-radius: 18px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    max-width: 340px;
+}
+
+#overlay-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+}
+
+#overlay-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 1.3rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    color: var(--neon-green);
+}
+
+#overlay-info {
+    font-size: 0.75rem;
+    line-height: 1.8;
+    color: var(--text-dim);
+    margin-bottom: 18px;
+}
+
+.key {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    color: var(--neon-blue);
+    background: rgba(0, 212, 255, 0.06);
+}
+
+.neon-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    padding: 12px 32px;
+    border: 1px solid var(--neon-green);
+    border-radius: 10px;
+    background: rgba(0, 255, 136, 0.08);
+    color: var(--neon-green);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.neon-btn:hover {
+    background: rgba(0, 255, 136, 0.18);
+    box-shadow: 0 0 24px rgba(0, 255, 136, 0.2);
+}
+
+/* Controls Hint */
+#controls-hint {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    text-align: center;
+}
+
+/* Footer */
+#footer {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 520px) {
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
+    #app {
+        padding: 10px 12px 20px;
+        gap: 8px;
+    }
+
+    #title {
+        font-size: 1.3rem;
+    }
+
+    #hud {
+        padding: 8px 16px;
+        gap: 16px;
+    }
+
+    .hud-value {
+        font-size: 0.9rem;
+    }
+
+    #game-canvas {
+        border-radius: 8px;
+    }
+}
