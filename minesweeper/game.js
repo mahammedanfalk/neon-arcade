@@ -76,6 +76,15 @@
         boardEl.innerHTML = '';
         boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
 
+        // Dynamic cell sizing based on screen width
+        const screenW = window.innerWidth;
+        const boardPadding = 24; // board padding + outer padding
+        const gap = 2; // grid gap
+        const availableW = Math.min(screenW - boardPadding, 700 - boardPadding);
+        const cellSize = Math.min(32, Math.floor((availableW - gap * (cols - 1)) / cols));
+        boardEl.style.setProperty('--cell-size', cellSize + 'px');
+        boardEl.style.setProperty('--cell-font', Math.max(0.4, cellSize * 0.022) + 'rem');
+
         for (let r = 0; r < rows; r++) {
             grid[r] = [];
             cellEls[r] = [];
