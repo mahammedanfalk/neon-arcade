@@ -13,7 +13,7 @@ A collection of retro-inspired browser games with stunning neon aesthetics.
 | 🧱 Tetris | ✅ Playable | Stack falling neon blocks, clear lines, chase combos |
 | 🏓 Pong | ✅ Playable | Neon paddles and glowing ball — play solo or vs a friend |
 | 💥 Breakout | ✅ Playable | Smash neon bricks with powerups, combos, and chaos |
-| 👾 Space Invaders | 🔒 Coming Soon | |
+| 👾 Space Invaders | ✅ Playable | Defend Earth from waves of neon aliens |
 | 🔢 2048 | 🔒 Coming Soon | |
 | 🃏 Memory Match | 🔒 Coming Soon | |
 
