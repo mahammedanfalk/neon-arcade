@@ -148,5 +148,38 @@ window.NeonSFX = (function () {
         setTimeout(() => playTone(900, 0.1, 'square', 0.07), 70);
     }
 
-    return { eat, gameOver, gameStart, turn, pause, hover, click, locked, place, win, draw, paddleHit, wallBounce, score, toggleMute, isMuted };
+    /** Line clear (Tetris) — ascending sweep */
+    function lineClear() {
+        playTone(500, 0.08, 'square', 0.08);
+        setTimeout(() => playTone(700, 0.08, 'square', 0.08), 60);
+        setTimeout(() => playTone(900, 0.08, 'square', 0.08), 120);
+        setTimeout(() => playTone(1100, 0.1, 'square', 0.07), 180);
+    }
+
+    /** Hard drop (Tetris) — short thud */
+    function hardDrop() {
+        playTone(150, 0.1, 'square', 0.12);
+        playNoise(0.06, 0.06);
+    }
+
+    /** Rotate (Tetris) — quick snap */
+    function rotate() {
+        playTone(1200, 0.04, 'square', 0.05);
+    }
+
+    /** Level up (Tetris) — celebratory arpeggio */
+    function levelUp() {
+        playTone(600, 0.08, 'square', 0.07);
+        setTimeout(() => playTone(800, 0.08, 'square', 0.07), 80);
+        setTimeout(() => playTone(1000, 0.08, 'square', 0.07), 160);
+        setTimeout(() => playTone(1300, 0.12, 'square', 0.08), 240);
+        setTimeout(() => playTone(1600, 0.15, 'square', 0.06), 340);
+    }
+
+    /** Move piece (Tetris) — subtle tick */
+    function move() {
+        playTone(1400, 0.02, 'square', 0.03);
+    }
+
+    return { eat, gameOver, gameStart, turn, pause, hover, click, locked, place, win, draw, paddleHit, wallBounce, score, lineClear, hardDrop, rotate, levelUp, move, toggleMute, isMuted };
 })();

@@ -10,8 +10,8 @@ A collection of retro-inspired browser games with stunning neon aesthetics.
 |------|--------|-------------|
 | 🐍 Snake | ✅ Playable | Classic snake with neon glow, particles, and increasing speed |
 | ❌⭕ Tic-Tac-Toe | ✅ Playable | X vs O with unbeatable AI or local 2-player mode |
-| 🧱 Tetris | 🔒 Coming Soon | |
-| 🏓 Pong | 🔒 Coming Soon | |
+| 🧱 Tetris | ✅ Playable | Stack falling neon blocks, clear lines, chase combos |
+| 🏓 Pong | ✅ Playable | Neon paddles and glowing ball — play solo or vs a friend |
 | 💥 Breakout | 🔒 Coming Soon | |
 | 👾 Space Invaders | 🔒 Coming Soon | |
 | 🔢 2048 | 🔒 Coming Soon | |

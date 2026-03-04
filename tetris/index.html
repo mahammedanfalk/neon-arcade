@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Neon Tetris — Stack falling neon blocks, clear lines, chase combos, survive the speed.">
+    <title>Tetris — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link">
+                <span>←</span> BACK TO ARCADE
+            </a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">TETRIS</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <!-- Game Area -->
+        <div id="game-area">
+            <!-- Main playfield -->
+            <div id="playfield-wrapper">
+                <canvas id="tetris-canvas" width="300" height="600"></canvas>
+            </div>
+
+            <!-- Side panel -->
+            <div id="side-panel">
+                <!-- Next piece -->
+                <div class="panel-box" id="next-box">
+                    <div class="panel-label">NEXT</div>
+                    <canvas id="next-canvas" width="120" height="120"></canvas>
+                </div>
+
+                <!-- Score -->
+                <div class="panel-box" id="score-box">
+                    <div class="panel-label">SCORE</div>
+                    <div class="panel-value" id="score-val">0</div>
+                </div>
+
+                <!-- Level -->
+                <div class="panel-box" id="level-box">
+                    <div class="panel-label">LEVEL</div>
+                    <div class="panel-value" id="level-val">1</div>
+                </div>
+
+                <!-- Lines -->
+                <div class="panel-box" id="lines-box">
+                    <div class="panel-label">LINES</div>
+                    <div class="panel-value" id="lines-val">0</div>
+                </div>
+
+                <!-- High Score -->
+                <div class="panel-box" id="high-box">
+                    <div class="panel-label">HIGH SCORE</div>
+                    <div class="panel-value" id="high-val">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Touch controls (mobile) -->
+        <div id="touch-controls">
+            <button class="touch-btn" id="touch-left" aria-label="Move Left">◀</button>
+            <button class="touch-btn" id="touch-rotate" aria-label="Rotate">↻</button>
+            <button class="touch-btn" id="touch-down" aria-label="Soft Drop">▼</button>
+            <button class="touch-btn" id="touch-right" aria-label="Move Right">▶</button>
+            <button class="touch-btn touch-wide" id="touch-drop" aria-label="Hard Drop">⏬ DROP</button>
+        </div>
+
+        <!-- Overlay for start / game over -->
+        <div id="overlay">
+            <div id="overlay-content">
+                <div id="overlay-icon">🧱</div>
+                <h2 id="overlay-title">Ready to Stack?</h2>
+                <p id="overlay-info">
+                    <span class="key">←</span> <span class="key">→</span> — Move
+                    <br>
+                    <span class="key">↑</span> — Rotate
+                    <br>
+                    <span class="key">↓</span> — Soft Drop &nbsp; <span class="key">Space</span> — Hard Drop
+                </p>
+                <button id="play-btn" class="neon-btn">START GAME</button>
+            </div>
+        </div>
+
+        <!-- Controls hint -->
+        <div id="controls-hint">
+            <span>Press <span class="key">P</span> to pause</span>
+        </div>
+
+        <footer id="footer">
+            <p>Clear lines, climb levels, chase the high score</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>
