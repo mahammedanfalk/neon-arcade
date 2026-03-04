@@ -79,6 +79,16 @@
         if (isMobile) {
             document.body.style.touchAction = 'none';
             document.body.style.overscrollBehavior = 'none';
+            document.documentElement.style.touchAction = 'none';
+            document.documentElement.style.overscrollBehavior = 'none';
+            document.documentElement.style.overflow = 'hidden';
+            document.documentElement.style.position = 'fixed';
+            document.documentElement.style.width = '100%';
+            document.documentElement.style.height = '100%';
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.height = '100%';
         }
 
         playBtn.addEventListener('click', startMatch);
@@ -143,7 +153,7 @@
         function handleTouches(touches) {
             const rect = canvas.getBoundingClientRect();
             if (isMobile) {
-                // Vertical layout: top half = paddle1, bottom half = paddle2
+                // Vertical layout: user = bottom (paddle2), AI/P2 = top (paddle1)
                 const scaleX = CANVAS_W / rect.width;
                 const scaleY = CANVAS_H / rect.height;
                 const midY = rect.top + rect.height / 2;
@@ -151,11 +161,13 @@
                     const t = touches[i];
                     const gameX = (t.clientX - rect.left) * scaleX - PADDLE_W / 2;
                     const clampedX = Math.max(0, Math.min(CANVAS_W - PADDLE_W, gameX));
-                    if (t.clientY < midY) {
-                        paddle1.x = clampedX;
+                    if (t.clientY >= midY) {
+                        // Bottom half = user's paddle (paddle2)
+                        paddle2.x = clampedX;
                     } else {
+                        // Top half = P2 paddle (paddle1) — only in 2P mode
                         if (mode === '2p') {
-                            paddle2.x = clampedX;
+                            paddle1.x = clampedX;
                         }
                     }
                 }
@@ -188,9 +200,11 @@
 
     function resizeCanvas() {
         if (isMobile) {
-            const maxW = Math.min(CANVAS_W, window.innerWidth - 24);
-            canvas.style.width = maxW + 'px';
-            canvas.style.height = (maxW * CANVAS_H / CANVAS_W) + 'px';
+            const maxW = Math.min(CANVAS_W, window.innerWidth - 16);
+            const maxH = window.innerHeight * 0.62; // leave room for HUD + safe area
+            const scale = Math.min(maxW / CANVAS_W, maxH / CANVAS_H);
+            canvas.style.width = (CANVAS_W * scale) + 'px';
+            canvas.style.height = (CANVAS_H * scale) + 'px';
         } else {
             const maxW = Math.min(CANVAS_W, window.innerWidth - 40);
             canvas.style.width = maxW + 'px';
@@ -286,7 +300,7 @@
         if (showControls) {
             if (isMobile) {
                 overlayInfo.innerHTML = `
-                    Drag top half to move your paddle${mode === '2p' ? '<br>Drag bottom half for Player 2' : ''}
+                    Drag bottom half to move your paddle${mode === '2p' ? '<br>Drag top half for Player 2' : ''}
                 `;
             } else {
                 overlayInfo.innerHTML = `
@@ -366,7 +380,8 @@
     }
 
     function updateMobile() {
-        // In mobile mode, AI controls paddle2 (bottom) by tracking ball X
+        // In mobile mode, AI controls paddle1 (TOP) by tracking ball X
+        // User controls paddle2 (BOTTOM) via touch
         if (mode !== '2p') {
             updateAIMobile();
         }
@@ -390,19 +405,21 @@
         if (checkPaddleHitMobile(paddle1, 'top')) handlePaddleHitMobile(paddle1, 'top');
         if (checkPaddleHitMobile(paddle2, 'bottom')) handlePaddleHitMobile(paddle2, 'bottom');
 
-        // Scoring (ball goes past top or bottom)
+        // Scoring: ball past top = user (paddle2/bottom) scores, ball past bottom = AI (paddle1/top) scores
         if (ball.y - BALL_R <= 0) {
+            // Ball went past TOP paddle (AI/paddle1) — user scores!
             bottomScore++;
             updateScoreboard();
             if (window.NeonSFX) NeonSFX.score();
-            if (bottomScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'AI Wins!' : 'Player 2 Wins!'); }
+            if (bottomScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'You Win! 🎉' : 'Player 2 Wins!'); }
             else resetBall(1);
         }
         if (ball.y + BALL_R >= CANVAS_H) {
+            // Ball went past BOTTOM paddle (user/paddle2) — AI scores
             topScore++;
             updateScoreboard();
             if (window.NeonSFX) NeonSFX.score();
-            if (topScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'You Win! 🎉' : 'Player 1 Wins!'); }
+            if (topScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'AI Wins!' : 'Player 1 Wins!'); }
             else resetBall(-1);
         }
     }
@@ -467,21 +484,22 @@
         }
     }
 
-    // ===== AI (Mobile) =====
+    // ===== AI (Mobile) — AI now controls paddle1 (TOP) =====
     function updateAIMobile() {
         const ai = AI_DIFFICULTY[difficulty];
-        if (ball.vy > 0) {
-            const timeToReach = (paddle2.y - ball.y) / ball.vy;
+        // AI controls paddle1 (top), tracks ball when ball is moving upward (toward AI)
+        if (ball.vy < 0) {
+            const timeToReach = (paddle1.y + paddle1.h - ball.y) / ball.vy;
             aiTargetPos = ball.x + ball.vx * timeToReach + aiError;
             if (aiTargetPos < 0) aiTargetPos = -aiTargetPos;
             if (aiTargetPos > CANVAS_W) aiTargetPos = 2 * CANVAS_W - aiTargetPos;
         } else {
             aiTargetPos = CANVAS_W / 2 + aiError;
         }
-        const paddleCenter = paddle2.x + PADDLE_W / 2;
+        const paddleCenter = paddle1.x + PADDLE_W / 2;
         const diff = aiTargetPos - paddleCenter;
         if (Math.abs(diff) > 4) {
-            paddle2.x += Math.sign(diff) * Math.min(ai.speed, Math.abs(diff) * ai.reaction);
+            paddle1.x += Math.sign(diff) * Math.min(ai.speed, Math.abs(diff) * ai.reaction);
         }
     }
 
