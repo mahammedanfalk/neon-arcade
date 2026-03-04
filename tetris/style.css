@@ -408,35 +408,56 @@ body::before {
     }
 
     #app {
-        padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 20px));
-        gap: 6px;
+        padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 20px));
+        gap: 4px;
         height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        overflow: hidden;
     }
 
+    /* Keep side panel to the RIGHT */
     #game-area {
-        flex-direction: column;
-        align-items: center;
+        flex-direction: row;
+        align-items: stretch;
+        gap: 6px;
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+    }
+
+    #playfield-wrapper {
+        flex: 0 0 auto;
     }
 
     #tetris-canvas {
-        width: 100%;
-        max-width: 280px;
-        height: auto;
+        /* Fill available height, maintain 1:2 aspect ratio */
+        width: auto;
+        height: 100%;
+        max-height: calc(100vh - 120px - env(safe-area-inset-bottom, 20px));
+        aspect-ratio: 1 / 2;
     }
 
     #side-panel {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        min-width: auto;
-        gap: 6px;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        min-width: 0;
+        flex: 1;
+        gap: 4px;
     }
 
     .panel-box {
-        padding: 6px 12px;
-        min-width: 70px;
+        padding: 4px 8px;
+        min-width: auto;
+        border-radius: 8px;
+    }
+
+    .panel-label {
+        font-size: 0.35rem;
+        letter-spacing: 0.1em;
+    }
+
+    .panel-value {
+        font-size: 0.75rem;
     }
 
     #next-box {
@@ -444,12 +465,8 @@ body::before {
     }
 
     #next-canvas {
-        width: 70px;
-        height: 70px;
-    }
-
-    .panel-value {
-        font-size: 0.9rem;
+        width: 50px;
+        height: 50px;
     }
 
     #touch-controls {
@@ -462,6 +479,22 @@ body::before {
 
     #footer {
         padding-bottom: env(safe-area-inset-bottom, 20px);
-        font-size: 0.55rem;
+        font-size: 0.45rem;
+    }
+
+    #header {
+        margin: 0;
+    }
+
+    #title {
+        font-size: 1rem;
+    }
+
+    #subtitle {
+        display: none;
+    }
+
+    #top-bar {
+        margin-bottom: 0;
     }
 }
