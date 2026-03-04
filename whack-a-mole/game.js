@@ -17,6 +17,15 @@
     let spawnTimeout = null;
     let combo = 0;
     let lastWhackTime = 0;
+    let gameMode = 'solo';
+
+    // Online state
+    const PEER_PREFIX = 'neonarcade-wam-';
+    let peer = null;
+    let conn = null;
+    let isHost = false;
+    let roomCode = '';
+    let oppScore = 0;
 
     // DOM
     const holes = document.querySelectorAll('.hole');
@@ -24,11 +33,13 @@
     const timeEl = document.getElementById('time-val');
     const bestEl = document.getElementById('best-val');
     const comboEl = document.getElementById('combo-val');
+    const oppScoreEl = document.getElementById('opp-score-val');
     const overlay = document.getElementById('overlay');
     const overlayIcon = document.getElementById('overlay-icon');
     const overlayTitle = document.getElementById('overlay-title');
     const overlayInfo = document.getElementById('overlay-info');
     const playBtn = document.getElementById('play-btn');
+    const hudOnlineItems = document.querySelectorAll('.hud-online');
 
     bestEl.textContent = bestScore;
 
@@ -70,6 +81,11 @@
             score += points;
             scoreEl.textContent = score;
 
+            // Send score to opponent
+            if (gameMode === 'online' && conn) {
+                conn.send({ type: 'score-update', score: score });
+            }
+
             // Float score
             const floater = document.createElement('div');
             floater.className = 'float-score' + (isGolden ? ' golden' : '');
@@ -94,6 +110,12 @@
     function spawnMole() {
         if (!gameRunning) return;
 
+        // In online mode, only host generates spawns
+        if (gameMode === 'online' && !isHost) {
+            scheduleSpawn();
+            return;
+        }
+
         // Pick a random non-active hole
         const available = [];
         holes.forEach((h, i) => {
@@ -105,29 +127,33 @@
         }
 
         const index = available[Math.floor(Math.random() * available.length)];
-        const hole = holes[index];
-        activeMoles.add(index);
-
-        // Golden mole?
         const isGolden = Math.random() < GOLDEN_CHANCE;
-        if (isGolden) hole.classList.add('golden');
-
-        hole.classList.add('active');
-
-        // Auto-hide after timeout
         const showTime = MIN_SHOW_TIME + Math.random() * (MAX_SHOW_TIME - MIN_SHOW_TIME);
-        // Speed up over time
         const speedFactor = Math.max(0.4, 1 - (GAME_DURATION - timeLeft) / GAME_DURATION * 0.6);
         const adjustedShowTime = showTime * speedFactor;
+
+        showMole(index, isGolden, adjustedShowTime);
+
+        // Broadcast to opponent
+        if (gameMode === 'online' && conn) {
+            conn.send({ type: 'spawn', index, isGolden, duration: adjustedShowTime });
+        }
+
+        scheduleSpawn();
+    }
+
+    function showMole(index, isGolden, duration) {
+        const hole = holes[index];
+        activeMoles.add(index);
+        if (isGolden) hole.classList.add('golden');
+        hole.classList.add('active');
 
         setTimeout(() => {
             if (hole.classList.contains('active')) {
                 hole.classList.remove('active', 'golden');
                 activeMoles.delete(index);
             }
-        }, adjustedShowTime);
-
-        scheduleSpawn();
+        }, duration);
     }
 
     function scheduleSpawn() {
@@ -141,6 +167,7 @@
     // ===== Game Control =====
     function startGame() {
         score = 0;
+        oppScore = 0;
         timeLeft = GAME_DURATION;
         combo = 0;
         lastWhackTime = 0;
@@ -151,6 +178,7 @@
         timeEl.textContent = GAME_DURATION;
         comboEl.textContent = '×1';
         comboEl.style.color = '#00ff88';
+        if (oppScoreEl) oppScoreEl.textContent = '0';
 
         holes.forEach(h => h.classList.remove('active', 'golden', 'whacked'));
 
@@ -187,24 +215,53 @@
 
         timeEl.style.color = '#00ff88';
 
-        if (score > bestScore) {
-            bestScore = score;
-            localStorage.setItem('wam-best', bestScore.toString());
-            bestEl.textContent = bestScore;
+        // Send final score to opponent
+        if (gameMode === 'online' && conn) {
+            conn.send({ type: 'final-score', score: score });
         }
 
-        if (window.NeonSFX) {
-            if (score > 0) NeonSFX.win();
-            else NeonSFX.gameOver();
+        if (gameMode === 'solo') {
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('wam-best', bestScore.toString());
+                bestEl.textContent = bestScore;
+            }
+
+            if (window.NeonSFX) {
+                if (score > 0) NeonSFX.win();
+                else NeonSFX.gameOver();
+            }
+
+            overlayIcon.textContent = score >= 30 ? '🏆' : score >= 15 ? '🔨' : '😅';
+            overlayTitle.textContent = score >= 30 ? 'AMAZING!' : score >= 15 ? 'Nice Job!' : 'Game Over';
+            overlayInfo.innerHTML = `
+                Score: <strong style="color:#00ff88">${score}</strong><br>
+                Best: <strong style="color:#00d4ff">${bestScore}</strong>
+                ${score >= bestScore && score > 0 ? '<br><span style="color:#ffe600">★ NEW BEST ★</span>' : ''}
+            `;
+        } else {
+            // Online mode
+            if (window.NeonSFX) {
+                if (score > oppScore) NeonSFX.win();
+                else NeonSFX.gameOver();
+            }
+
+            if (score > oppScore) {
+                overlayIcon.textContent = '🏆';
+                overlayTitle.textContent = 'YOU WIN!';
+            } else if (score < oppScore) {
+                overlayIcon.textContent = '💀';
+                overlayTitle.textContent = 'YOU LOSE!';
+            } else {
+                overlayIcon.textContent = '🤝';
+                overlayTitle.textContent = 'TIE!';
+            }
+            overlayInfo.innerHTML = `
+                You: <strong style="color:#00ff88">${score}</strong> &nbsp;
+                Opponent: <strong style="color:#ff2d75">${oppScore}</strong>
+            `;
         }
 
-        overlayIcon.textContent = score >= 30 ? '🏆' : score >= 15 ? '🔨' : '😅';
-        overlayTitle.textContent = score >= 30 ? 'AMAZING!' : score >= 15 ? 'Nice Job!' : 'Game Over';
-        overlayInfo.innerHTML = `
-            Score: <strong style="color:#00ff88">${score}</strong><br>
-            Best: <strong style="color:#00d4ff">${bestScore}</strong>
-            ${score >= bestScore && score > 0 ? '<br><span style="color:#ffe600">★ NEW BEST ★</span>' : ''}
-        `;
         playBtn.textContent = 'PLAY AGAIN';
         overlay.classList.remove('hidden');
     }
@@ -212,7 +269,213 @@
     // ===== Play Button =====
     playBtn.addEventListener('click', () => {
         if (window.NeonSFX) NeonSFX.click();
-        startGame();
+        if (gameMode === 'online' && isHost && conn) {
+            startGame();
+            conn.send({ type: 'start' });
+        } else if (gameMode !== 'online') {
+            startGame();
+        }
+    });
+
+    // ===== Mode Selector =====
+    document.querySelectorAll('#mode-selector .mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (window.NeonSFX) NeonSFX.click();
+            document.querySelectorAll('#mode-selector .mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const newMode = btn.dataset.mode;
+            if (gameMode === 'online' && newMode !== 'online') disconnectOnline();
+            gameMode = newMode;
+            if (gameMode === 'online') {
+                document.getElementById('online-panel').classList.remove('hidden');
+                hudOnlineItems.forEach(el => el.classList.remove('hidden'));
+                showLobby();
+            } else {
+                document.getElementById('online-panel').classList.add('hidden');
+                hudOnlineItems.forEach(el => el.classList.add('hidden'));
+            }
+        });
+    });
+
+    // ================================================================
+    //  ONLINE MULTIPLAYER (PeerJS)
+    // ================================================================
+
+    const onlineLobby = document.getElementById('online-lobby');
+    const onlineWaiting = document.getElementById('online-waiting');
+    const onlineConnected = document.getElementById('online-connected');
+    const waitingText = document.getElementById('waiting-text');
+    const roomCodeDisplay = document.getElementById('room-code-display');
+    const roomCodeEl = document.getElementById('room-code');
+    const shareHint = document.getElementById('share-hint');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+
+    function generateCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+        return code;
+    }
+
+    function showLobby() {
+        onlineLobby.classList.remove('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.add('hidden');
+        const input = document.getElementById('room-code-input');
+        if (input) input.value = '';
+    }
+
+    function showWaiting(text) {
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.remove('hidden');
+        onlineConnected.classList.add('hidden');
+        waitingText.textContent = text;
+    }
+
+    function showConnected() {
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.remove('hidden');
+        disconnectBtn.classList.remove('hidden');
+    }
+
+    document.getElementById('create-room-btn').addEventListener('click', () => {
+        if (window.NeonSFX) NeonSFX.click();
+        isHost = true;
+        roomCode = generateCode();
+        showWaiting('Creating room...');
+        if (peer) peer.destroy();
+        peer = new Peer(PEER_PREFIX + roomCode, { debug: 0 });
+        peer.on('open', () => {
+            waitingText.textContent = 'Waiting for opponent...';
+            roomCodeDisplay.classList.remove('hidden');
+            roomCodeEl.textContent = roomCode;
+            shareHint.classList.remove('hidden');
+        });
+        peer.on('connection', (c) => {
+            conn = c;
+            conn.on('open', () => setupConnection());
+            conn.on('error', () => handleDisconnect());
+        });
+        peer.on('error', (err) => {
+            if (err.type === 'unavailable-id') {
+                roomCode = generateCode();
+                peer.destroy();
+                document.getElementById('create-room-btn').click();
+            } else {
+                waitingText.textContent = 'Connection error. Try again.';
+            }
+        });
+    });
+
+    document.getElementById('join-room-btn').addEventListener('click', () => {
+        const input = document.getElementById('room-code-input').value.trim().toUpperCase();
+        if (!input || input.length < 3) return;
+        if (window.NeonSFX) NeonSFX.click();
+        isHost = false;
+        roomCode = input;
+        showWaiting('Connecting...');
+        if (peer) peer.destroy();
+        peer = new Peer(undefined, { debug: 0 });
+        peer.on('open', () => {
+            conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
+            conn.on('open', () => setupConnection());
+            conn.on('error', () => { waitingText.textContent = 'Room not found.'; });
+        });
+        peer.on('error', (err) => {
+            waitingText.textContent = err.type === 'peer-unavailable' ? 'Room not found.' : 'Connection error.';
+        });
+    });
+
+    document.getElementById('room-code-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('join-room-btn').click();
+    });
+
+    function setupConnection() {
+        if (window.NeonSFX) NeonSFX.gameStart();
+        showConnected();
+
+        conn.on('data', (data) => {
+            switch (data.type) {
+                case 'start':
+                    startGame();
+                    break;
+                case 'spawn':
+                    showMole(data.index, data.isGolden, data.duration);
+                    break;
+                case 'score-update':
+                    oppScore = data.score;
+                    if (oppScoreEl) oppScoreEl.textContent = oppScore;
+                    break;
+                case 'final-score':
+                    oppScore = data.score;
+                    if (oppScoreEl) oppScoreEl.textContent = oppScore;
+                    break;
+            }
+        });
+
+        conn.on('close', () => handleDisconnect());
+        conn.on('error', () => handleDisconnect());
+
+        // If host, auto-start
+        if (isHost) {
+            startGame();
+            conn.send({ type: 'start' });
+        }
+    }
+
+    function handleDisconnect() {
+        conn = null;
+        gameRunning = false;
+        clearInterval(timerInterval);
+        clearTimeout(spawnTimeout);
+        overlayIcon.textContent = '💔';
+        overlayTitle.textContent = 'Disconnected';
+        overlayInfo.textContent = 'Your opponent left the game.';
+        playBtn.textContent = 'OK';
+        overlay.classList.remove('hidden');
+        showLobby();
+        disconnectBtn.classList.add('hidden');
+        if (window.NeonSFX) NeonSFX.gameOver();
+    }
+
+    document.getElementById('cancel-online-btn').addEventListener('click', () => {
+        if (window.NeonSFX) NeonSFX.click();
+        if (peer) { peer.destroy(); peer = null; }
+        conn = null;
+        showLobby();
+    });
+
+    disconnectBtn.addEventListener('click', () => disconnectOnline());
+
+    function disconnectOnline() {
+        if (window.NeonSFX) NeonSFX.click();
+        if (conn) conn.close();
+        if (peer) { peer.destroy(); peer = null; }
+        conn = null;
+        showLobby();
+        disconnectBtn.classList.add('hidden');
+        gameRunning = false;
+        clearInterval(timerInterval);
+        clearTimeout(spawnTimeout);
+    }
+
+    document.getElementById('copy-code-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(roomCode).then(() => {
+            const btn = document.getElementById('copy-code-btn');
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 1500);
+        }).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = roomCode;
+            document.body.appendChild(el); el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            const btn = document.getElementById('copy-code-btn');
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 1500);
+        });
+        if (window.NeonSFX) NeonSFX.click();
     });
 
     // Mute
