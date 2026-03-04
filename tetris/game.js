@@ -647,6 +647,16 @@
     if (isMobile) {
         document.body.style.touchAction = 'none';
         document.body.style.overscrollBehavior = 'none';
+        document.documentElement.style.touchAction = 'none';
+        document.documentElement.style.overscrollBehavior = 'none';
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.position = 'fixed';
+        document.documentElement.style.width = '100%';
+        document.documentElement.style.height = '100%';
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.height = '100%';
         // Hide the old button controls
         const touchCtrlDiv = document.getElementById('touch-controls');
         if (touchCtrlDiv) touchCtrlDiv.style.display = 'none';
@@ -657,6 +667,9 @@
     let touchStartTime = 0;
     let touchMoved = false;
     let lastTouchMoveCol = 0; // track column-sized drags
+    let longPressTimer = null;
+    let longPressActive = false;
+    let softDropInterval = null;
 
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
@@ -667,14 +680,34 @@
         touchStartTime = Date.now();
         touchMoved = false;
         lastTouchMoveCol = 0;
+        longPressActive = false;
+
+        // Long press = continuous soft drop
+        longPressTimer = setTimeout(() => {
+            longPressActive = true;
+            softDropInterval = setInterval(() => {
+                if (gameRunning && !paused && currentPiece) {
+                    softDrop();
+                }
+            }, 60);
+        }, 500);
     }, { passive: false });
 
     canvas.addEventListener('touchmove', (e) => {
         e.preventDefault();
         if (!gameRunning || paused || !currentPiece) return;
+
+        // If long press is active (soft-dropping), don't process horizontal movements
+        if (longPressActive) return;
+
         const touch = e.touches[0];
         const dx = touch.clientX - touchStartX;
         const dy = touch.clientY - touchStartY;
+
+        // Cancel long press if user starts dragging
+        if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+            if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        }
 
         // Calculate column moves based on drag distance
         const rect = canvas.getBoundingClientRect();
@@ -691,16 +724,16 @@
             lastTouchMoveCol = colDelta;
             touchMoved = true;
         }
-
-        // Continuous soft drop if dragging downward significantly
-        if (dy > cellWidth * 1.5 && Math.abs(dy) > Math.abs(dx)) {
-            touchMoved = true;
-        }
     }, { passive: false });
 
     canvas.addEventListener('touchend', (e) => {
         e.preventDefault();
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        if (softDropInterval) { clearInterval(softDropInterval); softDropInterval = null; }
+
         if (!gameRunning || paused) return;
+        if (longPressActive) { longPressActive = false; return; }
+
         const touch = e.changedTouches[0];
         const dx = touch.clientX - touchStartX;
         const dy = touch.clientY - touchStartY;
@@ -714,7 +747,7 @@
             return;
         }
 
-        // Swipe detection (fast gesture)
+        // Fast swipe detection
         if (elapsed < 300 && absDy > 40) {
             if (dy > 0 && absDy > absDx) {
                 // Swipe down = hard drop
@@ -726,15 +759,14 @@
                 return;
             }
         }
-
-        // Slower downward drag = soft drop
-        if (dy > 40 && absDy > absDx) {
-            softDrop();
-        }
+        // No more slow-drag soft-drop — removed to prevent accidental single-block drops
     }, { passive: false });
 
     canvas.addEventListener('touchcancel', (e) => {
         e.preventDefault();
+        if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        if (softDropInterval) { clearInterval(softDropInterval); softDropInterval = null; }
+        longPressActive = false;
     }, { passive: false });
 
     // ===== Mute Button =====
