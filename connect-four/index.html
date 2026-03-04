@@ -37,6 +37,35 @@
             <button class="mode-btn" id="mode-2p" data-mode="2p">
                 <span class="mode-icon">👥</span> 2 Player
             </button>
+            <button class="mode-btn" id="mode-online" data-mode="online">
+                <span class="mode-icon">🌐</span> Online
+            </button>
+        </div>
+
+        <!-- Online panel -->
+        <div id="online-panel" class="hidden">
+            <div id="online-lobby">
+                <button id="create-room-btn" class="neon-btn neon-btn-sm">Create Room</button>
+                <div class="join-row">
+                    <input type="text" id="room-code-input" placeholder="Enter Code" maxlength="5"
+                        autocapitalize="characters" />
+                    <button id="join-room-btn" class="neon-btn neon-btn-sm">Join</button>
+                </div>
+            </div>
+            <div id="online-waiting" class="hidden">
+                <p id="waiting-text">Creating room...</p>
+                <div id="room-code-display" class="hidden">
+                    <span>Code: </span><strong id="room-code"></strong>
+                    <button id="copy-code-btn" title="Copy Code">📋</button>
+                </div>
+                <p id="share-hint" class="hidden" style="font-size:0.65rem;opacity:0.6;margin-top:4px;">Share this code
+                    with your opponent</p>
+                <button id="cancel-online-btn" class="neon-btn neon-btn-sm" style="margin-top:8px;">Cancel</button>
+            </div>
+            <div id="online-connected" class="hidden">
+                <p>Connected! You are <strong id="your-mark" class="p1-color">Player 1</strong></p>
+                <button id="disconnect-btn" class="neon-btn neon-btn-sm hidden">Disconnect</button>
+            </div>
         </div>
 
         <div id="status-bar">
@@ -72,6 +101,7 @@
         </footer>
     </div>
 
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="../sfx.js"></script>
     <script src="game.js"></script>
 </body>

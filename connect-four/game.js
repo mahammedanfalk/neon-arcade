@@ -13,6 +13,14 @@
     let aiThinking = false;
     let scores = { 1: 0, 2: 0, draw: 0 };
 
+    // Online state
+    const PEER_PREFIX = 'neonarcade-c4-';
+    let peer = null;
+    let conn = null;
+    let myPlayerNum = null;
+    let isHost = false;
+    let roomCode = '';
+
     // DOM
     const boardEl = document.getElementById('board');
     const colIndicators = document.getElementById('column-indicators');
@@ -31,12 +39,19 @@
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 if (window.NeonSFX) NeonSFX.click();
-                mode = btn.dataset.mode;
+                const newMode = btn.dataset.mode;
+                if (mode === 'online' && newMode !== 'online') disconnectOnline();
+                mode = newMode;
                 document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                p1Label.textContent = 'P1';
+                p1Label.textContent = mode === 'ai' ? 'YOU' : 'P1';
                 p2Label.textContent = mode === 'ai' ? 'AI' : 'P2';
-                if (mode === 'ai') p1Label.textContent = 'YOU';
+                if (mode === 'online') {
+                    document.getElementById('online-panel').classList.remove('hidden');
+                    showLobby();
+                } else {
+                    document.getElementById('online-panel').classList.add('hidden');
+                }
                 resetScores();
                 resetGame();
             });
@@ -127,11 +142,17 @@
     function handleColumnClick(col) {
         if (!gameActive || aiThinking) return;
         if (mode === 'ai' && currentPlayer === 2) return;
+        if (mode === 'online' && currentPlayer !== myPlayerNum) return;
 
         const row = getLowestEmptyRow(col);
         if (row === -1) return; // Column full
 
         dropDisc(row, col, currentPlayer);
+
+        // Send move to opponent
+        if (mode === 'online' && conn) {
+            conn.send({ type: 'move', col: col });
+        }
 
         if (checkWin(row, col, currentPlayer)) {
             endGame(currentPlayer);
@@ -379,6 +400,13 @@
                 statusText.textContent = 'Your turn';
                 statusBar.className = '';
             }
+        } else if (mode === 'online') {
+            if (currentPlayer === myPlayerNum) {
+                statusText.textContent = 'Your turn';
+            } else {
+                statusText.textContent = "Opponent's turn";
+            }
+            statusBar.className = currentPlayer === 2 ? 'p2-turn' : '';
         } else {
             statusText.textContent = `Player ${currentPlayer}'s turn`;
             statusBar.className = currentPlayer === 2 ? 'p2-turn' : '';
@@ -395,6 +423,205 @@
         scores = { 1: 0, 2: 0, draw: 0 };
         updateScoreboard();
     }
+
+    // ================================================================
+    //  ONLINE MULTIPLAYER (PeerJS)
+    // ================================================================
+
+    const onlinePanel = document.getElementById('online-panel');
+    const onlineLobby = document.getElementById('online-lobby');
+    const onlineWaiting = document.getElementById('online-waiting');
+    const onlineConnected = document.getElementById('online-connected');
+    const waitingText = document.getElementById('waiting-text');
+    const roomCodeDisplay = document.getElementById('room-code-display');
+    const roomCodeEl = document.getElementById('room-code');
+    const shareHint = document.getElementById('share-hint');
+    const yourMarkEl = document.getElementById('your-mark');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+
+    function generateCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+        return code;
+    }
+
+    function showLobby() {
+        onlineLobby.classList.remove('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.add('hidden');
+        const input = document.getElementById('room-code-input');
+        if (input) input.value = '';
+    }
+
+    function showWaiting(text) {
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.remove('hidden');
+        onlineConnected.classList.add('hidden');
+        waitingText.textContent = text;
+    }
+
+    function showConnected() {
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.remove('hidden');
+        yourMarkEl.textContent = myPlayerNum === 1 ? 'Player 1 (Blue)' : 'Player 2 (Pink)';
+        yourMarkEl.style.color = myPlayerNum === 1 ? '#00d4ff' : '#ff2d75';
+        disconnectBtn.classList.remove('hidden');
+    }
+
+    // Create Room
+    document.getElementById('create-room-btn').addEventListener('click', () => {
+        if (window.NeonSFX) NeonSFX.click();
+        isHost = true;
+        myPlayerNum = 1;
+        roomCode = generateCode();
+        showWaiting('Creating room...');
+        if (peer) peer.destroy();
+        peer = new Peer(PEER_PREFIX + roomCode, { debug: 0 });
+        peer.on('open', () => {
+            waitingText.textContent = 'Waiting for opponent...';
+            roomCodeDisplay.classList.remove('hidden');
+            roomCodeEl.textContent = roomCode;
+            shareHint.classList.remove('hidden');
+        });
+        peer.on('connection', (c) => {
+            conn = c;
+            conn.on('open', () => setupConnection());
+            conn.on('error', () => handleDisconnect());
+        });
+        peer.on('error', (err) => {
+            if (err.type === 'unavailable-id') {
+                roomCode = generateCode();
+                peer.destroy();
+                document.getElementById('create-room-btn').click();
+            } else {
+                waitingText.textContent = 'Connection error. Try again.';
+                roomCodeDisplay.classList.add('hidden');
+                shareHint.classList.add('hidden');
+            }
+        });
+    });
+
+    // Join Room
+    document.getElementById('join-room-btn').addEventListener('click', () => {
+        const input = document.getElementById('room-code-input').value.trim().toUpperCase();
+        if (!input || input.length < 3) return;
+        if (window.NeonSFX) NeonSFX.click();
+        isHost = false;
+        myPlayerNum = 2;
+        roomCode = input;
+        showWaiting('Connecting...');
+        roomCodeDisplay.classList.add('hidden');
+        shareHint.classList.add('hidden');
+        if (peer) peer.destroy();
+        peer = new Peer(undefined, { debug: 0 });
+        peer.on('open', () => {
+            conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
+            conn.on('open', () => setupConnection());
+            conn.on('error', () => { waitingText.textContent = 'Room not found.'; });
+        });
+        peer.on('error', (err) => {
+            waitingText.textContent = err.type === 'peer-unavailable' ? 'Room not found.' : 'Connection error.';
+        });
+    });
+
+    document.getElementById('room-code-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('join-room-btn').click();
+    });
+
+    function setupConnection() {
+        if (window.NeonSFX) NeonSFX.gameStart();
+        showConnected();
+        p1Label.textContent = myPlayerNum === 1 ? 'YOU' : 'OPP';
+        p2Label.textContent = myPlayerNum === 2 ? 'YOU' : 'OPP';
+        resetScores();
+        resetGame();
+
+        conn.on('data', (data) => {
+            switch (data.type) {
+                case 'move': {
+                    const col = data.col;
+                    const row = getLowestEmptyRow(col);
+                    if (row !== -1) {
+                        dropDisc(row, col, currentPlayer);
+                        if (checkWin(row, col, currentPlayer)) {
+                            endGame(currentPlayer);
+                            return;
+                        }
+                        if (isBoardFull()) {
+                            endGame(0);
+                            return;
+                        }
+                        currentPlayer = currentPlayer === 1 ? 2 : 1;
+                        updateStatus();
+                    }
+                    break;
+                }
+                case 'reset':
+                    resetGame();
+                    break;
+            }
+        });
+
+        conn.on('close', () => handleDisconnect());
+        conn.on('error', () => handleDisconnect());
+    }
+
+    function handleDisconnect() {
+        conn = null;
+        gameActive = false;
+        statusText.textContent = 'Opponent disconnected';
+        statusBar.className = '';
+        showLobby();
+        disconnectBtn.classList.add('hidden');
+        if (window.NeonSFX) NeonSFX.gameOver();
+    }
+
+    document.getElementById('cancel-online-btn').addEventListener('click', () => {
+        if (window.NeonSFX) NeonSFX.click();
+        if (peer) { peer.destroy(); peer = null; }
+        conn = null;
+        showLobby();
+    });
+
+    disconnectBtn.addEventListener('click', () => disconnectOnline());
+
+    function disconnectOnline() {
+        if (window.NeonSFX) NeonSFX.click();
+        if (conn) conn.close();
+        if (peer) { peer.destroy(); peer = null; }
+        conn = null;
+        showLobby();
+        disconnectBtn.classList.add('hidden');
+        gameActive = false;
+    }
+
+    document.getElementById('copy-code-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(roomCode).then(() => {
+            const btn = document.getElementById('copy-code-btn');
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 1500);
+        }).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = roomCode;
+            document.body.appendChild(el); el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            const btn = document.getElementById('copy-code-btn');
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 1500);
+        });
+        if (window.NeonSFX) NeonSFX.click();
+    });
+
+    // Update resetBtn to sync online reset
+    const origResetClick = resetBtn.onclick;
+    resetBtn.addEventListener('click', () => {
+        if (mode === 'online' && conn) {
+            conn.send({ type: 'reset' });
+        }
+    });
 
     // ===== Bootstrap =====
     window.addEventListener('DOMContentLoaded', init);
