@@ -1,4 +1,4 @@
-// ===== Neon Memory Match — Game Engine =====
+// ===== Neon Memory Match — Game Engine (Solo, 2P Local, Online) =====
 (function () {
     'use strict';
 
@@ -19,6 +19,18 @@
     const p2PairsEl = document.getElementById('p2-pairs');
     const hud2pItems = document.querySelectorAll('.hud-2p');
 
+    // Online panel
+    const onlinePanel = document.getElementById('online-panel');
+    const onlineLobby = document.getElementById('online-lobby');
+    const onlineWaiting = document.getElementById('online-waiting');
+    const onlineConnected = document.getElementById('online-connected');
+    const waitingText = document.getElementById('waiting-text');
+    const roomCodeDisplay = document.getElementById('room-code-display');
+    const roomCodeEl = document.getElementById('room-code');
+    const shareHint = document.getElementById('share-hint');
+    const yourMarkEl = document.getElementById('your-mark');
+    const disconnectBtn = document.getElementById('disconnect-btn');
+
     const SYMBOLS = ['🚀', '⚡', '🎮', '💎', '🌟', '🔥', '🎵', '👾'];
     const COLORS = [
         { bg: 'rgba(0, 212, 255, 0.15)', border: 'rgba(0, 212, 255, 0.35)', glow: 'rgba(0, 212, 255, 0.2)' },
@@ -32,6 +44,7 @@
     ];
 
     const TOTAL_PAIRS = SYMBOLS.length;
+    const PEER_PREFIX = 'neonarcade-mm-';
 
     // ===== State =====
     let cards = [];
@@ -44,10 +57,18 @@
     let locked = false;
     let bestMoves = parseInt(localStorage.getItem('memory-best') || '0', 10);
 
-    // 2P state
-    let gameMode = 'solo'; // 'solo' | '2p'
+    // Mode state
+    let gameMode = 'solo'; // 'solo' | '2p' | 'online'
     let currentPlayer = 1; // 1 or 2
     let playerScores = { 1: 0, 2: 0 };
+
+    // Online state
+    let peer = null;
+    let conn = null;
+    let myPlayerNum = null; // 1 or 2
+    let isHost = false;
+    let roomCode = '';
+    let boardSeed = null; // shuffled card order from host
 
     if (bestMoves > 0) bestEl.textContent = bestMoves;
 
@@ -57,13 +78,25 @@
             if (window.NeonSFX) NeonSFX.click();
             document.querySelectorAll('#mode-selector .mode-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            gameMode = btn.dataset.mode;
+
+            const newMode = btn.dataset.mode;
+            if (gameMode === 'online' && newMode !== 'online') disconnectOnline();
+            gameMode = newMode;
+
+            if (gameMode === 'online') {
+                onlinePanel.classList.remove('hidden');
+                showLobby();
+            } else {
+                onlinePanel.classList.add('hidden');
+            }
+
             updateModeUI();
         });
     });
 
     function updateModeUI() {
-        if (gameMode === '2p') {
+        const is2p = gameMode === '2p' || gameMode === 'online';
+        if (is2p) {
             turnIndicator.classList.remove('hidden');
             hud2pItems.forEach(el => el.classList.remove('hidden'));
             bestItem.classList.add('hidden');
@@ -76,13 +109,17 @@
     }
 
     function updateTurnDisplay() {
-        if (gameMode !== '2p') return;
+        if (gameMode !== '2p' && gameMode !== 'online') return;
         if (currentPlayer === 1) {
-            turnText.textContent = "Player 1's Turn";
+            turnText.textContent = gameMode === 'online'
+                ? (myPlayerNum === 1 ? "Your Turn" : "Opponent's Turn")
+                : "Player 1's Turn";
             turnText.style.color = '#00d4ff';
             turnIndicator.style.borderColor = 'rgba(0, 212, 255, 0.3)';
         } else {
-            turnText.textContent = "Player 2's Turn";
+            turnText.textContent = gameMode === 'online'
+                ? (myPlayerNum === 2 ? "Your Turn" : "Opponent's Turn")
+                : "Player 2's Turn";
             turnText.style.color = '#ff2d75';
             turnIndicator.style.borderColor = 'rgba(255, 45, 117, 0.3)';
         }
@@ -100,16 +137,26 @@
     }
 
     // ===== Build Board =====
-    function buildBoard() {
+    function buildBoard(order) {
         board.innerHTML = '';
         const pairs = [];
         for (let i = 0; i < TOTAL_PAIRS; i++) {
             pairs.push({ symbol: SYMBOLS[i], colorIndex: i });
             pairs.push({ symbol: SYMBOLS[i], colorIndex: i });
         }
-        shuffle(pairs);
 
-        cards = pairs.map((item, index) => {
+        // Use provided order or shuffle
+        let orderedPairs;
+        if (order) {
+            orderedPairs = order.map(idx => pairs[idx]);
+        } else {
+            const indices = pairs.map((_, i) => i);
+            shuffle(indices);
+            boardSeed = indices; // save for sending to opponent
+            orderedPairs = indices.map(idx => pairs[idx]);
+        }
+
+        cards = orderedPairs.map((item, index) => {
             const card = document.createElement('div');
             card.className = 'memory-card';
             card.dataset.index = index;
@@ -130,22 +177,36 @@
             card.appendChild(front);
             card.appendChild(back);
 
-            card.addEventListener('click', () => flipCard(card));
+            card.addEventListener('click', () => onCardClick(index));
             board.appendChild(card);
 
             return { el: card, symbol: item.symbol, matched: false };
         });
     }
 
-    // ===== Flip Logic =====
-    function flipCard(cardEl) {
+    // ===== Card Click =====
+    function onCardClick(index) {
         if (!gameRunning || locked) return;
-        const idx = parseInt(cardEl.dataset.index);
-        const card = cards[idx];
+        // In online mode, only allow clicks on your turn
+        if (gameMode === 'online' && currentPlayer !== myPlayerNum) return;
 
-        // Can't flip already flipped or matched cards
+        const cardEl = cards[index].el;
         if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
-        // Can't flip same card twice
+        if (flippedCards.length === 1 && flippedCards[0].el === cardEl) return;
+
+        flipCard(index);
+
+        // Send flip to opponent
+        if (gameMode === 'online' && conn) {
+            conn.send({ type: 'flip', index: index });
+        }
+    }
+
+    function flipCard(index) {
+        const cardEl = cards[index].el;
+        const card = cards[index];
+
+        if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
         if (flippedCards.length === 1 && flippedCards[0].el === cardEl) return;
 
         cardEl.classList.add('flipped');
@@ -164,7 +225,6 @@
         const [a, b] = flippedCards;
 
         if (a.symbol === b.symbol) {
-            // Match!
             setTimeout(() => {
                 a.el.classList.add('matched', 'match-flash');
                 b.el.classList.add('matched', 'match-flash');
@@ -173,10 +233,9 @@
                 matchedPairs++;
                 pairsEl.textContent = `${matchedPairs}/${TOTAL_PAIRS}`;
 
-                if (gameMode === '2p') {
+                if (gameMode === '2p' || gameMode === 'online') {
                     playerScores[currentPlayer]++;
                     updateTurnDisplay();
-                    // Current player gets another turn on a match — don't switch
                 }
 
                 flippedCards = [];
@@ -188,7 +247,6 @@
                 }
             }, 300);
         } else {
-            // No match — shake and flip back
             setTimeout(() => {
                 a.el.classList.add('shake');
                 b.el.classList.add('shake');
@@ -200,8 +258,7 @@
                     flippedCards = [];
                     locked = false;
 
-                    // Switch player in 2P mode on miss
-                    if (gameMode === '2p') {
+                    if (gameMode === '2p' || gameMode === 'online') {
                         currentPlayer = currentPlayer === 1 ? 2 : 1;
                         updateTurnDisplay();
                     }
@@ -236,7 +293,7 @@
     }
 
     // ===== Start / End =====
-    function startGame() {
+    function startGame(order) {
         moves = 0;
         matchedPairs = 0;
         flippedCards = [];
@@ -248,7 +305,7 @@
         pairsEl.textContent = `0/${TOTAL_PAIRS}`;
         timeEl.textContent = '0:00';
         updateModeUI();
-        buildBoard();
+        buildBoard(order || null);
         stopTimer();
         startTimer();
         overlay.classList.add('hidden');
@@ -266,9 +323,7 @@
                 localStorage.setItem('memory-best', bestMoves.toString());
                 bestEl.textContent = bestMoves;
             }
-
             if (window.NeonSFX) NeonSFX.win();
-
             overlayIcon.textContent = '🏆';
             overlayTitle.textContent = 'PERFECT!';
             overlayInfo.innerHTML = `
@@ -277,32 +332,35 @@
                 ${moves <= bestMoves ? '<br><span style="color:#ffe600;">★ NEW BEST ★</span>' : ''}
             `;
         } else {
-            // 2P Mode — determine winner
+            // 2P / Online
             const p1 = playerScores[1];
             const p2 = playerScores[2];
             if (window.NeonSFX) NeonSFX.win();
 
+            let winnerLabel1 = gameMode === 'online' ? (myPlayerNum === 1 ? 'You' : 'Opponent') : 'Player 1';
+            let winnerLabel2 = gameMode === 'online' ? (myPlayerNum === 2 ? 'You' : 'Opponent') : 'Player 2';
+
             if (p1 > p2) {
                 overlayIcon.textContent = '🎉';
-                overlayTitle.textContent = 'PLAYER 1 WINS!';
+                overlayTitle.textContent = `${winnerLabel1} Win${winnerLabel1 === 'You' ? '' : 's'}!`;
                 overlayInfo.innerHTML = `
-                    <span style="color:#00d4ff">Player 1: <strong>${p1}</strong> pairs</span><br>
-                    <span style="color:#ff2d75">Player 2: <strong>${p2}</strong> pairs</span><br>
+                    <span style="color:#00d4ff">${winnerLabel1}: <strong>${p1}</strong> pairs</span><br>
+                    <span style="color:#ff2d75">${winnerLabel2}: <strong>${p2}</strong> pairs</span><br>
                     Time: <strong style="color:#00ff88">${formatTime(elapsed)}</strong>
                 `;
             } else if (p2 > p1) {
                 overlayIcon.textContent = '🎉';
-                overlayTitle.textContent = 'PLAYER 2 WINS!';
+                overlayTitle.textContent = `${winnerLabel2} Win${winnerLabel2 === 'You' ? '' : 's'}!`;
                 overlayInfo.innerHTML = `
-                    <span style="color:#00d4ff">Player 1: <strong>${p1}</strong> pairs</span><br>
-                    <span style="color:#ff2d75">Player 2: <strong>${p2}</strong> pairs</span><br>
+                    <span style="color:#00d4ff">${winnerLabel1}: <strong>${p1}</strong> pairs</span><br>
+                    <span style="color:#ff2d75">${winnerLabel2}: <strong>${p2}</strong> pairs</span><br>
                     Time: <strong style="color:#00ff88">${formatTime(elapsed)}</strong>
                 `;
             } else {
                 overlayIcon.textContent = '🤝';
                 overlayTitle.textContent = "IT'S A TIE!";
                 overlayInfo.innerHTML = `
-                    Both players matched <strong style="color:#ffe600">${p1}</strong> pairs!<br>
+                    Both matched <strong style="color:#ffe600">${p1}</strong> pairs!<br>
                     Time: <strong style="color:#00ff88">${formatTime(elapsed)}</strong>
                 `;
             }
@@ -315,7 +373,219 @@
     // ===== Input =====
     playBtn.addEventListener('click', () => {
         if (window.NeonSFX) NeonSFX.click();
-        startGame();
+        if (gameMode === 'online') {
+            // Host starts and sends board to opponent
+            if (isHost && conn) {
+                startGame();
+                conn.send({ type: 'start', order: boardSeed });
+            }
+        } else {
+            startGame();
+        }
+    });
+
+    // ================================================================
+    //  ONLINE MULTIPLAYER (PeerJS)
+    // ================================================================
+
+    function generateCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 5; i++) {
+            code += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return code;
+    }
+
+    function showLobby() {
+        onlineLobby.classList.remove('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.add('hidden');
+        const input = document.getElementById('room-code-input');
+        if (input) input.value = '';
+    }
+
+    function showWaiting(text) {
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.remove('hidden');
+        onlineConnected.classList.add('hidden');
+        waitingText.textContent = text;
+    }
+
+    function showConnected() {
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.remove('hidden');
+        yourMarkEl.textContent = myPlayerNum === 1 ? 'Player 1' : 'Player 2';
+        yourMarkEl.style.color = myPlayerNum === 1 ? '#00d4ff' : '#ff2d75';
+        disconnectBtn.classList.remove('hidden');
+    }
+
+    // Create Room
+    document.getElementById('create-room-btn').addEventListener('click', () => {
+        if (window.NeonSFX) NeonSFX.click();
+        isHost = true;
+        myPlayerNum = 1;
+        roomCode = generateCode();
+
+        showWaiting('Creating room...');
+
+        if (peer) peer.destroy();
+        peer = new Peer(PEER_PREFIX + roomCode, { debug: 0 });
+
+        peer.on('open', () => {
+            waitingText.textContent = 'Waiting for opponent...';
+            roomCodeDisplay.classList.remove('hidden');
+            roomCodeEl.textContent = roomCode;
+            shareHint.classList.remove('hidden');
+        });
+
+        peer.on('connection', (c) => {
+            conn = c;
+            conn.on('open', () => {
+                setupConnection();
+            });
+            conn.on('error', () => handleDisconnect());
+        });
+
+        peer.on('error', (err) => {
+            console.error('PeerJS error:', err);
+            if (err.type === 'unavailable-id') {
+                roomCode = generateCode();
+                peer.destroy();
+                document.getElementById('create-room-btn').click();
+            } else {
+                waitingText.textContent = 'Connection error. Try again.';
+                roomCodeDisplay.classList.add('hidden');
+                shareHint.classList.add('hidden');
+            }
+        });
+    });
+
+    // Join Room
+    document.getElementById('join-room-btn').addEventListener('click', () => {
+        const input = document.getElementById('room-code-input').value.trim().toUpperCase();
+        if (!input || input.length < 3) return;
+
+        if (window.NeonSFX) NeonSFX.click();
+        isHost = false;
+        myPlayerNum = 2;
+        roomCode = input;
+
+        showWaiting('Connecting...');
+        roomCodeDisplay.classList.add('hidden');
+        shareHint.classList.add('hidden');
+
+        if (peer) peer.destroy();
+        peer = new Peer(undefined, { debug: 0 });
+
+        peer.on('open', () => {
+            conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
+            conn.on('open', () => setupConnection());
+            conn.on('error', () => {
+                waitingText.textContent = 'Room not found. Check code.';
+            });
+        });
+
+        peer.on('error', (err) => {
+            console.error('PeerJS error:', err);
+            if (err.type === 'peer-unavailable') {
+                waitingText.textContent = 'Room not found. Check code.';
+            } else {
+                waitingText.textContent = 'Connection error. Try again.';
+            }
+        });
+    });
+
+    // Enter key to join
+    document.getElementById('room-code-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') document.getElementById('join-room-btn').click();
+    });
+
+    function setupConnection() {
+        if (window.NeonSFX) NeonSFX.gameStart();
+        showConnected();
+        updateModeUI();
+
+        conn.on('data', (data) => {
+            switch (data.type) {
+                case 'start':
+                    // Guest receives board order from host
+                    startGame(data.order);
+                    break;
+                case 'flip':
+                    // Opponent flipped a card
+                    flipCard(data.index);
+                    break;
+            }
+        });
+
+        conn.on('close', () => handleDisconnect());
+        conn.on('error', () => handleDisconnect());
+
+        // If host, auto-start a game
+        if (isHost) {
+            startGame();
+            conn.send({ type: 'start', order: boardSeed });
+        }
+    }
+
+    function handleDisconnect() {
+        conn = null;
+        gameRunning = false;
+        stopTimer();
+        overlayIcon.textContent = '💔';
+        overlayTitle.textContent = 'Disconnected';
+        overlayInfo.textContent = 'Your opponent left the game.';
+        playBtn.textContent = 'OK';
+        overlay.classList.remove('hidden');
+        showLobby();
+        disconnectBtn.classList.add('hidden');
+        if (window.NeonSFX) NeonSFX.gameOver();
+    }
+
+    // Cancel
+    document.getElementById('cancel-online-btn').addEventListener('click', () => {
+        if (window.NeonSFX) NeonSFX.click();
+        if (peer) { peer.destroy(); peer = null; }
+        conn = null;
+        showLobby();
+    });
+
+    // Disconnect
+    disconnectBtn.addEventListener('click', () => {
+        disconnectOnline();
+    });
+
+    function disconnectOnline() {
+        if (window.NeonSFX) NeonSFX.click();
+        if (conn) conn.close();
+        if (peer) { peer.destroy(); peer = null; }
+        conn = null;
+        showLobby();
+        disconnectBtn.classList.add('hidden');
+        gameRunning = false;
+        stopTimer();
+    }
+
+    // Copy room code
+    document.getElementById('copy-code-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(roomCode).then(() => {
+            const btn = document.getElementById('copy-code-btn');
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 1500);
+        }).catch(() => {
+            const el = document.createElement('textarea');
+            el.value = roomCode;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            const btn = document.getElementById('copy-code-btn');
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 1500);
+        });
+        if (window.NeonSFX) NeonSFX.click();
     });
 
     // Mute

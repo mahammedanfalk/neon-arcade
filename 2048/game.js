@@ -305,7 +305,11 @@
     document.addEventListener('touchstart', (e) => {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
-    }, { passive: true });
+    }, { passive: false });
+
+    document.addEventListener('touchmove', (e) => {
+        e.preventDefault(); // prevent scroll and pull-to-refresh
+    }, { passive: false });
 
     document.addEventListener('touchend', (e) => {
         const dx = e.changedTouches[0].clientX - touchStartX;
@@ -314,12 +318,13 @@
         const absDy = Math.abs(dy);
         if (Math.max(absDx, absDy) < 30) return; // too short
 
+        e.preventDefault();
         if (absDx > absDy) {
             doMove(dx > 0 ? 'right' : 'left');
         } else {
             doMove(dy > 0 ? 'down' : 'up');
         }
-    }, { passive: true });
+    }, { passive: false });
 
     // Play button
     playBtn.addEventListener('click', () => {

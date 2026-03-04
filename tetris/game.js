@@ -640,55 +640,102 @@
         }
     });
 
-    // ===== Touch Controls =====
-    function bindTouch(id, action) {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-        let interval = null;
-        let timeout = null;
+    // ===== Touch Controls — Canvas Gestures =====
+    const isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-        const start = (e) => {
-            e.preventDefault();
-            action();
-            timeout = setTimeout(() => {
-                interval = setInterval(action, REPEAT_RATE);
-            }, REPEAT_DELAY);
-        };
-
-        const stop = (e) => {
-            e.preventDefault();
-            if (timeout) clearTimeout(timeout);
-            if (interval) clearInterval(interval);
-            timeout = null;
-            interval = null;
-        };
-
-        btn.addEventListener('touchstart', start, { passive: false });
-        btn.addEventListener('touchend', stop, { passive: false });
-        btn.addEventListener('touchcancel', stop, { passive: false });
-        // Also mouse for testing
-        btn.addEventListener('mousedown', start);
-        btn.addEventListener('mouseup', stop);
-        btn.addEventListener('mouseleave', stop);
+    // Prevent page scrolling on mobile during gameplay
+    if (isMobile) {
+        document.body.style.touchAction = 'none';
+        document.body.style.overscrollBehavior = 'none';
+        // Hide the old button controls
+        const touchCtrlDiv = document.getElementById('touch-controls');
+        if (touchCtrlDiv) touchCtrlDiv.style.display = 'none';
     }
 
-    bindTouch('touch-left', moveLeft);
-    bindTouch('touch-right', moveRight);
-    bindTouch('touch-down', softDrop);
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    let touchMoved = false;
+    let lastTouchMoveCol = 0; // track column-sized drags
 
-    const rotateBtn = document.getElementById('touch-rotate');
-    if (rotateBtn) {
-        const doRotate = (e) => { e.preventDefault(); rotate(); };
-        rotateBtn.addEventListener('touchstart', doRotate, { passive: false });
-        rotateBtn.addEventListener('mousedown', doRotate);
-    }
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!gameRunning || paused) return;
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartTime = Date.now();
+        touchMoved = false;
+        lastTouchMoveCol = 0;
+    }, { passive: false });
 
-    const dropBtn = document.getElementById('touch-drop');
-    if (dropBtn) {
-        const doDrop = (e) => { e.preventDefault(); hardDrop(); };
-        dropBtn.addEventListener('touchstart', doDrop, { passive: false });
-        dropBtn.addEventListener('mousedown', doDrop);
-    }
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!gameRunning || paused || !currentPiece) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+
+        // Calculate column moves based on drag distance
+        const rect = canvas.getBoundingClientRect();
+        const cellWidth = rect.width / COLS;
+        const colDelta = Math.floor(dx / cellWidth);
+
+        if (colDelta !== lastTouchMoveCol) {
+            const diff = colDelta - lastTouchMoveCol;
+            if (diff > 0) {
+                for (let i = 0; i < diff; i++) moveRight();
+            } else {
+                for (let i = 0; i < -diff; i++) moveLeft();
+            }
+            lastTouchMoveCol = colDelta;
+            touchMoved = true;
+        }
+
+        // Continuous soft drop if dragging downward significantly
+        if (dy > cellWidth * 1.5 && Math.abs(dy) > Math.abs(dx)) {
+            touchMoved = true;
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (!gameRunning || paused) return;
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+        const elapsed = Date.now() - touchStartTime;
+
+        if (!touchMoved && absDx < 15 && absDy < 15) {
+            // Tap = rotate
+            rotate();
+            return;
+        }
+
+        // Swipe detection (fast gesture)
+        if (elapsed < 300 && absDy > 40) {
+            if (dy > 0 && absDy > absDx) {
+                // Swipe down = hard drop
+                hardDrop();
+                return;
+            } else if (dy < 0 && absDy > absDx) {
+                // Swipe up = rotate
+                rotate();
+                return;
+            }
+        }
+
+        // Slower downward drag = soft drop
+        if (dy > 40 && absDy > absDx) {
+            softDrop();
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchcancel', (e) => {
+        e.preventDefault();
+    }, { passive: false });
 
     // ===== Mute Button =====
     const muteBtn = document.getElementById('mute-btn');

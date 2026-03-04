@@ -448,22 +448,56 @@
     });
     document.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
-    // Touch
-    function bindTouch(id, keyName) {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-        const start = (e) => { e.preventDefault(); keys[keyName] = true; };
-        const stop = (e) => { e.preventDefault(); keys[keyName] = false; };
-        btn.addEventListener('touchstart', start, { passive: false });
-        btn.addEventListener('touchend', stop, { passive: false });
-        btn.addEventListener('touchcancel', stop, { passive: false });
-        btn.addEventListener('mousedown', start);
-        btn.addEventListener('mouseup', stop);
-        btn.addEventListener('mouseleave', stop);
+    // Touch — drag to move, auto-fire while touching
+    let touchActive = false;
+    let touchAutoFireInterval = null;
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!gameRunning || paused) return;
+        touchActive = true;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = W / rect.width;
+        const tx = (e.touches[0].clientX - rect.left) * scaleX;
+        player.x = Math.max(0, Math.min(W - PLAYER_W, tx - PLAYER_W / 2));
+        // Start auto-fire
+        if (!touchAutoFireInterval) {
+            touchAutoFireInterval = setInterval(() => {
+                if (!gameRunning || paused || !touchActive) return;
+                if (shootCooldown <= 0) {
+                    bullets.push({ x: player.x + PLAYER_W / 2, y: player.y, w: 3, h: 10 });
+                    shootCooldown = 12;
+                    if (window.NeonSFX) NeonSFX.turn();
+                }
+            }, 50);
+        }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!touchActive || !gameRunning || paused) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = W / rect.width;
+        const tx = (e.touches[0].clientX - rect.left) * scaleX;
+        player.x = Math.max(0, Math.min(W - PLAYER_W, tx - PLAYER_W / 2));
+    }, { passive: false });
+
+    const stopTouch = (e) => {
+        e.preventDefault();
+        touchActive = false;
+        if (touchAutoFireInterval) {
+            clearInterval(touchAutoFireInterval);
+            touchAutoFireInterval = null;
+        }
+    };
+    canvas.addEventListener('touchend', stopTouch, { passive: false });
+    canvas.addEventListener('touchcancel', stopTouch, { passive: false });
+
+    // Hide touch-controls buttons on mobile (replaced by drag)
+    const touchCtrlDiv = document.getElementById('touch-controls');
+    if (touchCtrlDiv && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
+        touchCtrlDiv.style.display = 'none';
     }
-    bindTouch('touch-left', 'ArrowLeft');
-    bindTouch('touch-right', 'ArrowRight');
-    bindTouch('touch-fire', ' ');
 
     // Mute
     const muteBtn = document.getElementById('mute-btn');

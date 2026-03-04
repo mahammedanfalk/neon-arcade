@@ -2,11 +2,14 @@
 (function () {
     'use strict';
 
-    // ===== Constants =====
-    const CANVAS_W = 700;
-    const CANVAS_H = 500;
-    const PADDLE_W = 12;
-    const PADDLE_H = 90;
+    // ===== Detect mobile =====
+    const isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth < 768;
+
+    // ===== Constants (adapt for mobile) =====
+    const CANVAS_W = isMobile ? 400 : 700;
+    const CANVAS_H = isMobile ? 650 : 500;
+    const PADDLE_W = isMobile ? 90 : 12;  // horizontal in mobile, vertical in desktop
+    const PADDLE_H = isMobile ? 12 : 90;
     const BALL_R = 8;
     const PADDLE_SPEED = 6;
     const BALL_SPEED_INIT = 5;
@@ -34,19 +37,19 @@
     let paused = false;
     let animId = null;
 
-    let leftScore = 0;
-    let rightScore = 0;
+    let topScore = 0; // left = top in mobile
+    let bottomScore = 0; // right = bottom in mobile
     let matchOver = false;
 
     // Keys
     const keys = {};
 
-    // Paddles
-    let leftPaddle, rightPaddle, ball;
+    // Paddles & ball
+    let paddle1, paddle2, ball;
     let ballTrail = [];
 
     // AI
-    let aiTargetY = CANVAS_H / 2;
+    let aiTargetPos = isMobile ? CANVAS_W / 2 : CANVAS_H / 2;
     let aiError = 0;
 
     // ===== DOM =====
@@ -65,9 +68,18 @@
     const p2Label = $('#p2-label');
     const diffSelector = $('#difficulty-selector');
 
+    // Update canvas dimensions
+    canvas.width = CANVAS_W;
+    canvas.height = CANVAS_H;
+
     // ===== Init =====
     function init() {
         resetObjects();
+
+        if (isMobile) {
+            document.body.style.touchAction = 'none';
+            document.body.style.overscrollBehavior = 'none';
+        }
 
         playBtn.addEventListener('click', startMatch);
 
@@ -114,8 +126,6 @@
         window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
         // ===== Touch controls =====
-        const activeTouches = {}; // track touches by side: { left: touchY, right: touchY }
-
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             handleTouches(e.touches);
@@ -132,17 +142,37 @@
 
         function handleTouches(touches) {
             const rect = canvas.getBoundingClientRect();
-            const scaleY = CANVAS_H / rect.height;
-            const midX = rect.left + rect.width / 2;
-            for (let i = 0; i < touches.length; i++) {
-                const t = touches[i];
-                const gameY = (t.clientY - rect.top) * scaleY - PADDLE_H / 2;
-                const clampedY = Math.max(0, Math.min(CANVAS_H - PADDLE_H, gameY));
-                if (t.clientX < midX) {
-                    leftPaddle.y = clampedY;
-                } else {
-                    if (mode === '2p') {
-                        rightPaddle.y = clampedY;
+            if (isMobile) {
+                // Vertical layout: top half = paddle1, bottom half = paddle2
+                const scaleX = CANVAS_W / rect.width;
+                const scaleY = CANVAS_H / rect.height;
+                const midY = rect.top + rect.height / 2;
+                for (let i = 0; i < touches.length; i++) {
+                    const t = touches[i];
+                    const gameX = (t.clientX - rect.left) * scaleX - PADDLE_W / 2;
+                    const clampedX = Math.max(0, Math.min(CANVAS_W - PADDLE_W, gameX));
+                    if (t.clientY < midY) {
+                        paddle1.x = clampedX;
+                    } else {
+                        if (mode === '2p') {
+                            paddle2.x = clampedX;
+                        }
+                    }
+                }
+            } else {
+                // Horizontal layout: left half = paddle1, right half = paddle2
+                const scaleY = CANVAS_H / rect.height;
+                const midX = rect.left + rect.width / 2;
+                for (let i = 0; i < touches.length; i++) {
+                    const t = touches[i];
+                    const gameY = (t.clientY - rect.top) * scaleY - PADDLE_H / 2;
+                    const clampedY = Math.max(0, Math.min(CANVAS_H - PADDLE_H, gameY));
+                    if (t.clientX < midX) {
+                        paddle1.y = clampedY;
+                    } else {
+                        if (mode === '2p') {
+                            paddle2.y = clampedY;
+                        }
                     }
                 }
             }
@@ -157,9 +187,15 @@
     }
 
     function resizeCanvas() {
-        const maxW = Math.min(CANVAS_W, window.innerWidth - 40);
-        canvas.style.width = maxW + 'px';
-        canvas.style.height = (maxW * CANVAS_H / CANVAS_W) + 'px';
+        if (isMobile) {
+            const maxW = Math.min(CANVAS_W, window.innerWidth - 24);
+            canvas.style.width = maxW + 'px';
+            canvas.style.height = (maxW * CANVAS_H / CANVAS_W) + 'px';
+        } else {
+            const maxW = Math.min(CANVAS_W, window.innerWidth - 40);
+            canvas.style.width = maxW + 'px';
+            canvas.style.height = (maxW * CANVAS_H / CANVAS_W) + 'px';
+        }
     }
 
     // ===== Mode =====
@@ -181,28 +217,46 @@
 
     // ===== Objects =====
     function resetObjects() {
-        leftPaddle = { x: 20, y: CANVAS_H / 2 - PADDLE_H / 2, w: PADDLE_W, h: PADDLE_H };
-        rightPaddle = { x: CANVAS_W - 20 - PADDLE_W, y: CANVAS_H / 2 - PADDLE_H / 2, w: PADDLE_W, h: PADDLE_H };
+        if (isMobile) {
+            // Vertical: paddles at top and bottom, move horizontally
+            paddle1 = { x: CANVAS_W / 2 - PADDLE_W / 2, y: 20, w: PADDLE_W, h: PADDLE_H };
+            paddle2 = { x: CANVAS_W / 2 - PADDLE_W / 2, y: CANVAS_H - 20 - PADDLE_H, w: PADDLE_W, h: PADDLE_H };
+        } else {
+            // Horizontal: paddles on left and right, move vertically
+            paddle1 = { x: 20, y: CANVAS_H / 2 - PADDLE_H / 2, w: 12, h: 90 };
+            paddle2 = { x: CANVAS_W - 20 - 12, y: CANVAS_H / 2 - PADDLE_H / 2, w: 12, h: 90 };
+        }
         resetBall(1);
     }
 
     function resetBall(dir) {
         const angle = (Math.random() * Math.PI / 4) - Math.PI / 8;
-        ball = {
-            x: CANVAS_W / 2,
-            y: CANVAS_H / 2,
-            vx: BALL_SPEED_INIT * dir * Math.cos(angle),
-            vy: BALL_SPEED_INIT * Math.sin(angle),
-            speed: BALL_SPEED_INIT,
-        };
+        if (isMobile) {
+            // Ball moves vertically (down = toward paddle2)
+            ball = {
+                x: CANVAS_W / 2,
+                y: CANVAS_H / 2,
+                vx: BALL_SPEED_INIT * Math.sin(angle),
+                vy: BALL_SPEED_INIT * dir * Math.cos(angle),
+                speed: BALL_SPEED_INIT,
+            };
+        } else {
+            ball = {
+                x: CANVAS_W / 2,
+                y: CANVAS_H / 2,
+                vx: BALL_SPEED_INIT * dir * Math.cos(angle),
+                vy: BALL_SPEED_INIT * Math.sin(angle),
+                speed: BALL_SPEED_INIT,
+            };
+        }
         ballTrail = [];
         aiError = (Math.random() - 0.5) * AI_DIFFICULTY[difficulty].errorMargin * 2;
     }
 
     // ===== Match Control =====
     function startMatch() {
-        leftScore = 0;
-        rightScore = 0;
+        topScore = 0;
+        bottomScore = 0;
         matchOver = false;
         paused = false;
         updateScoreboard();
@@ -216,8 +270,8 @@
     function stopMatch() {
         running = false;
         if (animId) cancelAnimationFrame(animId);
-        leftScore = 0;
-        rightScore = 0;
+        topScore = 0;
+        bottomScore = 0;
         matchOver = false;
         updateScoreboard();
         resetObjects();
@@ -230,10 +284,9 @@
         overlayTitle.textContent = title;
         overlayIcon.textContent = icon;
         if (showControls) {
-            const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
             if (isMobile) {
                 overlayInfo.innerHTML = `
-                    Touch & drag on the left side to move your paddle${mode === '2p' ? '<br>Right side controls Player 2' : ''}
+                    Drag top half to move your paddle${mode === '2p' ? '<br>Drag bottom half for Player 2' : ''}
                 `;
             } else {
                 overlayInfo.innerHTML = `
@@ -258,132 +311,177 @@
     }
 
     function update() {
-        // ===== Move Paddles =====
-        // Left paddle: W / S
-        if (keys['w'] || keys['W']) leftPaddle.y -= PADDLE_SPEED;
-        if (keys['s'] || keys['S']) leftPaddle.y += PADDLE_SPEED;
-
-        // Right paddle: Arrow keys (2P) or AI
-        if (mode === '2p') {
-            if (keys['ArrowUp']) rightPaddle.y -= PADDLE_SPEED;
-            if (keys['ArrowDown']) rightPaddle.y += PADDLE_SPEED;
+        if (isMobile) {
+            updateMobile();
         } else {
-            updateAI();
+            updateDesktop();
+        }
+    }
+
+    function updateDesktop() {
+        // ===== Move Paddles =====
+        if (keys['w'] || keys['W']) paddle1.y -= PADDLE_SPEED;
+        if (keys['s'] || keys['S']) paddle1.y += PADDLE_SPEED;
+
+        if (mode === '2p') {
+            if (keys['ArrowUp']) paddle2.y -= PADDLE_SPEED;
+            if (keys['ArrowDown']) paddle2.y += PADDLE_SPEED;
+        } else {
+            updateAIDesktop();
         }
 
-        // Clamp paddles
-        leftPaddle.y = Math.max(0, Math.min(CANVAS_H - PADDLE_H, leftPaddle.y));
-        rightPaddle.y = Math.max(0, Math.min(CANVAS_H - PADDLE_H, rightPaddle.y));
+        paddle1.y = Math.max(0, Math.min(CANVAS_H - paddle1.h, paddle1.y));
+        paddle2.y = Math.max(0, Math.min(CANVAS_H - paddle2.h, paddle2.y));
 
-        // ===== Ball Trail =====
+        // ===== Ball =====
         ballTrail.push({ x: ball.x, y: ball.y });
         if (ballTrail.length > TRAIL_LENGTH) ballTrail.shift();
 
-        // ===== Move Ball =====
         ball.x += ball.vx;
         ball.y += ball.vy;
 
         // Top / bottom walls
-        if (ball.y - BALL_R <= 0) {
-            ball.y = BALL_R;
-            ball.vy = Math.abs(ball.vy);
-            if (window.NeonSFX) NeonSFX.wallBounce();
-        }
-        if (ball.y + BALL_R >= CANVAS_H) {
-            ball.y = CANVAS_H - BALL_R;
-            ball.vy = -Math.abs(ball.vy);
-            if (window.NeonSFX) NeonSFX.wallBounce();
-        }
+        if (ball.y - BALL_R <= 0) { ball.y = BALL_R; ball.vy = Math.abs(ball.vy); if (window.NeonSFX) NeonSFX.wallBounce(); }
+        if (ball.y + BALL_R >= CANVAS_H) { ball.y = CANVAS_H - BALL_R; ball.vy = -Math.abs(ball.vy); if (window.NeonSFX) NeonSFX.wallBounce(); }
 
         // Paddle collisions
-        if (checkPaddleHit(leftPaddle, 'left')) {
-            handlePaddleHit(leftPaddle);
-        }
-        if (checkPaddleHit(rightPaddle, 'right')) {
-            handlePaddleHit(rightPaddle);
-        }
+        if (checkPaddleHitDesktop(paddle1, 'left')) handlePaddleHitDesktop(paddle1);
+        if (checkPaddleHitDesktop(paddle2, 'right')) handlePaddleHitDesktop(paddle2);
 
         // Scoring
         if (ball.x - BALL_R <= 0) {
-            rightScore++;
+            bottomScore++;
             updateScoreboard();
             if (window.NeonSFX) NeonSFX.score();
-            if (rightScore >= WIN_SCORE) {
-                endMatch(mode === 'ai' ? 'AI Wins!' : 'Player 2 Wins!');
-            } else {
-                resetBall(1);
-            }
+            if (bottomScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'AI Wins!' : 'Player 2 Wins!'); }
+            else resetBall(1);
         }
         if (ball.x + BALL_R >= CANVAS_W) {
-            leftScore++;
+            topScore++;
             updateScoreboard();
             if (window.NeonSFX) NeonSFX.score();
-            if (leftScore >= WIN_SCORE) {
-                endMatch(mode === 'ai' ? 'You Win! 🎉' : 'Player 1 Wins!');
-            } else {
-                resetBall(-1);
-            }
+            if (topScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'You Win! 🎉' : 'Player 1 Wins!'); }
+            else resetBall(-1);
         }
     }
 
-    function checkPaddleHit(paddle, side) {
+    function updateMobile() {
+        // In mobile mode, AI controls paddle2 (bottom) by tracking ball X
+        if (mode !== '2p') {
+            updateAIMobile();
+        }
+
+        // Clamp paddles
+        paddle1.x = Math.max(0, Math.min(CANVAS_W - PADDLE_W, paddle1.x));
+        paddle2.x = Math.max(0, Math.min(CANVAS_W - PADDLE_W, paddle2.x));
+
+        // ===== Ball =====
+        ballTrail.push({ x: ball.x, y: ball.y });
+        if (ballTrail.length > TRAIL_LENGTH) ballTrail.shift();
+
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        // Left/right walls bounce
+        if (ball.x - BALL_R <= 0) { ball.x = BALL_R; ball.vx = Math.abs(ball.vx); if (window.NeonSFX) NeonSFX.wallBounce(); }
+        if (ball.x + BALL_R >= CANVAS_W) { ball.x = CANVAS_W - BALL_R; ball.vx = -Math.abs(ball.vx); if (window.NeonSFX) NeonSFX.wallBounce(); }
+
+        // Paddle collisions
+        if (checkPaddleHitMobile(paddle1, 'top')) handlePaddleHitMobile(paddle1, 'top');
+        if (checkPaddleHitMobile(paddle2, 'bottom')) handlePaddleHitMobile(paddle2, 'bottom');
+
+        // Scoring (ball goes past top or bottom)
+        if (ball.y - BALL_R <= 0) {
+            bottomScore++;
+            updateScoreboard();
+            if (window.NeonSFX) NeonSFX.score();
+            if (bottomScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'AI Wins!' : 'Player 2 Wins!'); }
+            else resetBall(1);
+        }
+        if (ball.y + BALL_R >= CANVAS_H) {
+            topScore++;
+            updateScoreboard();
+            if (window.NeonSFX) NeonSFX.score();
+            if (topScore >= WIN_SCORE) { endMatch(mode === 'ai' ? 'You Win! 🎉' : 'Player 1 Wins!'); }
+            else resetBall(-1);
+        }
+    }
+
+    // ===== Desktop paddle hit =====
+    function checkPaddleHitDesktop(paddle, side) {
         if (side === 'left') {
-            return ball.x - BALL_R <= paddle.x + paddle.w &&
-                ball.x + BALL_R >= paddle.x &&
-                ball.y >= paddle.y &&
-                ball.y <= paddle.y + paddle.h &&
-                ball.vx < 0;
+            return ball.x - BALL_R <= paddle.x + paddle.w && ball.x + BALL_R >= paddle.x && ball.y >= paddle.y && ball.y <= paddle.y + paddle.h && ball.vx < 0;
         } else {
-            return ball.x + BALL_R >= paddle.x &&
-                ball.x - BALL_R <= paddle.x + paddle.w &&
-                ball.y >= paddle.y &&
-                ball.y <= paddle.y + paddle.h &&
-                ball.vx > 0;
+            return ball.x + BALL_R >= paddle.x && ball.x - BALL_R <= paddle.x + paddle.w && ball.y >= paddle.y && ball.y <= paddle.y + paddle.h && ball.vx > 0;
         }
     }
 
-    function handlePaddleHit(paddle) {
-        // Calculate hit position relative to paddle center (-1 to 1)
+    function handlePaddleHitDesktop(paddle) {
         const relY = ((ball.y - paddle.y) / paddle.h) * 2 - 1;
-        const angle = relY * (Math.PI / 3.5); // max ~51 degrees
-
-        // Increase speed slightly
+        const angle = relY * (Math.PI / 3.5);
         ball.speed = Math.min(ball.speed + 0.3, BALL_SPEED_MAX);
-
         const dir = ball.vx > 0 ? -1 : 1;
         ball.vx = dir * ball.speed * Math.cos(angle);
         ball.vy = ball.speed * Math.sin(angle);
-
-        // Nudge ball out of paddle
         if (dir === 1) ball.x = paddle.x + paddle.w + BALL_R + 1;
         else ball.x = paddle.x - BALL_R - 1;
-
         if (window.NeonSFX) NeonSFX.paddleHit();
     }
 
-    // ===== AI =====
-    function updateAI() {
-        const ai = AI_DIFFICULTY[difficulty];
-
-        // Only react when ball is coming toward AI
-        if (ball.vx > 0) {
-            // Predict where ball will be
-            const timeToReach = (rightPaddle.x - ball.x) / ball.vx;
-            aiTargetY = ball.y + ball.vy * timeToReach + aiError;
-            // Bounce prediction
-            if (aiTargetY < 0) aiTargetY = -aiTargetY;
-            if (aiTargetY > CANVAS_H) aiTargetY = 2 * CANVAS_H - aiTargetY;
+    // ===== Mobile paddle hit =====
+    function checkPaddleHitMobile(paddle, side) {
+        if (side === 'top') {
+            return ball.y - BALL_R <= paddle.y + paddle.h && ball.y + BALL_R >= paddle.y && ball.x >= paddle.x && ball.x <= paddle.x + paddle.w && ball.vy < 0;
         } else {
-            // Return toward center when ball going away
-            aiTargetY = CANVAS_H / 2 + aiError;
+            return ball.y + BALL_R >= paddle.y && ball.y - BALL_R <= paddle.y + paddle.h && ball.x >= paddle.x && ball.x <= paddle.x + paddle.w && ball.vy > 0;
         }
+    }
 
-        const paddleCenter = rightPaddle.y + PADDLE_H / 2;
-        const diff = aiTargetY - paddleCenter;
+    function handlePaddleHitMobile(paddle, side) {
+        const relX = ((ball.x - paddle.x) / paddle.w) * 2 - 1;
+        const angle = relX * (Math.PI / 3.5);
+        ball.speed = Math.min(ball.speed + 0.3, BALL_SPEED_MAX);
+        const dir = ball.vy > 0 ? -1 : 1;
+        ball.vy = dir * ball.speed * Math.cos(angle);
+        ball.vx = ball.speed * Math.sin(angle);
+        if (dir === 1) ball.y = paddle.y + paddle.h + BALL_R + 1;
+        else ball.y = paddle.y - BALL_R - 1;
+        if (window.NeonSFX) NeonSFX.paddleHit();
+    }
 
+    // ===== AI (Desktop) =====
+    function updateAIDesktop() {
+        const ai = AI_DIFFICULTY[difficulty];
+        if (ball.vx > 0) {
+            const timeToReach = (paddle2.x - ball.x) / ball.vx;
+            aiTargetPos = ball.y + ball.vy * timeToReach + aiError;
+            if (aiTargetPos < 0) aiTargetPos = -aiTargetPos;
+            if (aiTargetPos > CANVAS_H) aiTargetPos = 2 * CANVAS_H - aiTargetPos;
+        } else {
+            aiTargetPos = CANVAS_H / 2 + aiError;
+        }
+        const paddleCenter = paddle2.y + paddle2.h / 2;
+        const diff = aiTargetPos - paddleCenter;
         if (Math.abs(diff) > 4) {
-            const move = Math.sign(diff) * Math.min(ai.speed, Math.abs(diff) * ai.reaction);
-            rightPaddle.y += move;
+            paddle2.y += Math.sign(diff) * Math.min(ai.speed, Math.abs(diff) * ai.reaction);
+        }
+    }
+
+    // ===== AI (Mobile) =====
+    function updateAIMobile() {
+        const ai = AI_DIFFICULTY[difficulty];
+        if (ball.vy > 0) {
+            const timeToReach = (paddle2.y - ball.y) / ball.vy;
+            aiTargetPos = ball.x + ball.vx * timeToReach + aiError;
+            if (aiTargetPos < 0) aiTargetPos = -aiTargetPos;
+            if (aiTargetPos > CANVAS_W) aiTargetPos = 2 * CANVAS_W - aiTargetPos;
+        } else {
+            aiTargetPos = CANVAS_W / 2 + aiError;
+        }
+        const paddleCenter = paddle2.x + PADDLE_W / 2;
+        const diff = aiTargetPos - paddleCenter;
+        if (Math.abs(diff) > 4) {
+            paddle2.x += Math.sign(diff) * Math.min(ai.speed, Math.abs(diff) * ai.reaction);
         }
     }
 
@@ -406,6 +504,27 @@
     function drawFrame() {
         ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
+        if (isMobile) {
+            drawFrameMobile();
+        } else {
+            drawFrameDesktop();
+        }
+
+        // Paused text
+        if (paused && running) {
+            ctx.fillStyle = 'rgba(6, 6, 20, 0.6)';
+            ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+            ctx.font = '900 28px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = COL_PURPLE;
+            ctx.shadowColor = COL_PURPLE;
+            ctx.shadowBlur = 15;
+            ctx.fillText('PAUSED', CANVAS_W / 2, CANVAS_H / 2 + 8);
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    function drawFrameDesktop() {
         // Background glow
         const grdL = ctx.createRadialGradient(0, CANVAS_H / 2, 0, 0, CANVAS_H / 2, 200);
         grdL.addColorStop(0, 'rgba(0, 212, 255, 0.04)');
@@ -429,7 +548,41 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Ball trail
+        drawBallTrailAndBall();
+        drawPaddle(paddle1, COL_BLUE);
+        drawPaddle(paddle2, COL_PINK);
+    }
+
+    function drawFrameMobile() {
+        // Background glow — top and bottom
+        const grdT = ctx.createRadialGradient(CANVAS_W / 2, 0, 0, CANVAS_W / 2, 0, 200);
+        grdT.addColorStop(0, 'rgba(0, 212, 255, 0.04)');
+        grdT.addColorStop(1, 'transparent');
+        ctx.fillStyle = grdT;
+        ctx.fillRect(0, 0, CANVAS_W, CANVAS_H / 2);
+
+        const grdB = ctx.createRadialGradient(CANVAS_W / 2, CANVAS_H, 0, CANVAS_W / 2, CANVAS_H, 200);
+        grdB.addColorStop(0, 'rgba(255, 45, 117, 0.04)');
+        grdB.addColorStop(1, 'transparent');
+        ctx.fillStyle = grdB;
+        ctx.fillRect(0, CANVAS_H / 2, CANVAS_W, CANVAS_H / 2);
+
+        // Center horizontal dashed line
+        ctx.setLineDash([8, 10]);
+        ctx.strokeStyle = COL_LINE;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, CANVAS_H / 2);
+        ctx.lineTo(CANVAS_W, CANVAS_H / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        drawBallTrailAndBall();
+        drawPaddle(paddle1, COL_BLUE);
+        drawPaddle(paddle2, COL_PINK);
+    }
+
+    function drawBallTrailAndBall() {
         for (let i = 0; i < ballTrail.length; i++) {
             const t = ballTrail[i];
             const alpha = (i / ballTrail.length) * 0.3;
@@ -440,7 +593,6 @@
             ctx.fill();
         }
 
-        // Ball
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
         ctx.fillStyle = COL_GREEN;
@@ -448,24 +600,6 @@
         ctx.shadowBlur = 18;
         ctx.fill();
         ctx.shadowBlur = 0;
-
-        // Left paddle
-        drawPaddle(leftPaddle, COL_BLUE);
-        // Right paddle
-        drawPaddle(rightPaddle, COL_PINK);
-
-        // Paused text
-        if (paused && running) {
-            ctx.fillStyle = 'rgba(6, 6, 20, 0.6)';
-            ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-            ctx.font = '900 28px Orbitron';
-            ctx.textAlign = 'center';
-            ctx.fillStyle = COL_PURPLE;
-            ctx.shadowColor = COL_PURPLE;
-            ctx.shadowBlur = 15;
-            ctx.fillText('PAUSED', CANVAS_W / 2, CANVAS_H / 2 + 8);
-            ctx.shadowBlur = 0;
-        }
     }
 
     function drawPaddle(p, color) {
@@ -473,7 +607,6 @@
         ctx.shadowColor = color;
         ctx.shadowBlur = 14;
 
-        // Rounded rectangle
         const r = 6;
         ctx.beginPath();
         ctx.moveTo(p.x + r, p.y);
@@ -492,8 +625,8 @@
 
     // ===== Scoreboard =====
     function updateScoreboard() {
-        scoreLeftEl.textContent = leftScore;
-        scoreRightEl.textContent = rightScore;
+        scoreLeftEl.textContent = topScore;
+        scoreRightEl.textContent = bottomScore;
     }
 
     // ===== Bootstrap =====

@@ -188,6 +188,92 @@ body::before {
     display: none !important;
 }
 
+/* ===== Online Panel ===== */
+#online-panel {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    background: var(--bg-card);
+    backdrop-filter: blur(8px);
+    min-width: 200px;
+    text-align: center;
+}
+
+#online-lobby {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.join-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+#room-code-input {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+    text-align: center;
+    width: 100px;
+    outline: none;
+}
+
+#room-code-input:focus {
+    border-color: rgba(0, 255, 136, 0.3);
+}
+
+.neon-btn-sm {
+    font-size: 0.55rem !important;
+    padding: 6px 14px !important;
+    letter-spacing: 0.08em !important;
+}
+
+#room-code-display {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: var(--neon-green);
+    margin-top: 6px;
+}
+
+#copy-code-btn {
+    background: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    margin-left: 6px;
+    transition: var(--transition);
+}
+
+#copy-code-btn:hover {
+    border-color: rgba(0, 255, 136, 0.3);
+}
+
+#online-connected p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.p1-color {
+    color: #00d4ff;
+}
+
+.p2-color {
+    color: #ff2d75;
+}
+
 #hud {
     display: flex;
     gap: 14px;

@@ -352,6 +352,7 @@ body::before {
 
     #game-canvas {
         border-radius: 8px;
+        touch-action: none;
     }
 
     #hud {

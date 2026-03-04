@@ -37,6 +37,8 @@ body {
     align-items: center;
     justify-content: center;
     overflow-x: hidden;
+    overscroll-behavior: none;
+    touch-action: pan-x pan-y;
 }
 
 body::before {
