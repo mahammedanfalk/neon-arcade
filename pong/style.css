@@ -356,6 +356,92 @@ body::before {
     color: var(--text-muted);
 }
 
+/* ===== Online Panel ===== */
+#online-panel {
+    background: var(--bg-card, rgba(18, 18, 42, 0.85));
+    backdrop-filter: blur(12px);
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+    font-size: 0.7rem;
+    width: 100%;
+    max-width: 340px;
+}
+
+.join-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    justify-content: center;
+}
+
+.join-row input {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-align: center;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary, #e8e8f0);
+    width: 120px;
+    outline: none;
+}
+
+.join-row input:focus {
+    border-color: var(--neon-blue, #00d4ff);
+}
+
+#room-code-display {
+    margin-top: 10px;
+    font-size: 0.75rem;
+}
+
+#room-code {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    color: var(--neon-yellow, #ffe600);
+    letter-spacing: 0.15em;
+}
+
+#copy-code-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-left: 6px;
+}
+
+.neon-btn-sm {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
+    padding: 6px 14px;
+    border: 1px solid var(--neon-green, #00ff88);
+    border-radius: 8px;
+    background: rgba(0, 255, 136, 0.08);
+    color: var(--neon-green, #00ff88);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.neon-btn-sm:hover {
+    background: rgba(0, 255, 136, 0.18);
+    box-shadow: 0 0 16px rgba(0, 255, 136, 0.2);
+}
+
+.hidden {
+    display: none !important;
+}
+
+.neon-blue {
+    color: var(--neon-blue, #00d4ff);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 500px) {
 

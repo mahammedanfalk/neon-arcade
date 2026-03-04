@@ -37,9 +37,17 @@
     let paused = false;
     let animId = null;
 
-    let topScore = 0; // left = top in mobile
-    let bottomScore = 0; // right = bottom in mobile
+    let topScore = 0;
+    let bottomScore = 0;
     let matchOver = false;
+
+    // Online state
+    const PEER_PREFIX = 'neonarcade-pong-';
+    let peer = null;
+    let conn = null;
+    let isHost = false;
+    let roomCode = '';
+    let onlineReady = false;
 
     // Keys
     const keys = {};
@@ -214,16 +222,30 @@
 
     // ===== Mode =====
     function setMode(m) {
+        if (mode === 'online' && m !== 'online') disconnectOnline();
         mode = m;
         $$('.mode-btn').forEach((b) => b.classList.remove('active'));
-        $(`#mode-${m}`).classList.add('active');
+        const btn = $(`#mode-${m}`);
+        if (btn) btn.classList.add('active');
+
+        const onlinePanel = $('#online-panel');
 
         if (m === 'ai') {
             diffSelector.classList.remove('hidden');
             p2Label.textContent = 'AI';
-        } else {
+            if (onlinePanel) onlinePanel.classList.add('hidden');
+        } else if (m === '2p') {
             diffSelector.classList.add('hidden');
             p2Label.textContent = 'P2';
+            if (onlinePanel) onlinePanel.classList.add('hidden');
+        } else if (m === 'online') {
+            diffSelector.classList.add('hidden');
+            p1Label.textContent = isMobile ? 'TOP' : 'LEFT';
+            p2Label.textContent = isMobile ? 'BOTTOM' : 'RIGHT';
+            if (onlinePanel) {
+                onlinePanel.classList.remove('hidden');
+                showLobby();
+            }
         }
 
         stopMatch();
@@ -325,10 +347,23 @@
     }
 
     function update() {
+        if (mode === 'online' && !isHost) return; // Guest doesn't run physics
         if (isMobile) {
             updateMobile();
         } else {
             updateDesktop();
+        }
+        // Send state to guest
+        if (mode === 'online' && isHost && conn) {
+            conn.send({
+                type: 'state',
+                p1: { x: paddle1.x, y: paddle1.y },
+                p2: { x: paddle2.x, y: paddle2.y },
+                ball: { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy },
+                ts: topScore,
+                bs: bottomScore,
+                trail: ballTrail.slice(-4)
+            });
         }
     }
 
@@ -380,9 +415,10 @@
     }
 
     function updateMobile() {
-        // In mobile mode, AI controls paddle1 (TOP) by tracking ball X
-        // User controls paddle2 (BOTTOM) via touch
-        if (mode !== '2p') {
+        if (mode === 'online') {
+            // Host controls bottom paddle2 via touch
+            // Guest paddle1 comes from network
+        } else if (mode !== '2p') {
             updateAIMobile();
         }
 
@@ -646,6 +682,291 @@
         scoreLeftEl.textContent = topScore;
         scoreRightEl.textContent = bottomScore;
     }
+
+    // ================================================================
+    //  ONLINE MULTIPLAYER (PeerJS)
+    // ================================================================
+
+    const onlineLobby = $('#online-lobby');
+    const onlineWaiting = $('#online-waiting');
+    const onlineConnected = $('#online-connected');
+    const waitingText = $('#waiting-text');
+    const roomCodeDisplay = $('#room-code-display');
+    const roomCodeEl = $('#room-code');
+    const shareHint = $('#share-hint');
+    const disconnectBtn = $('#disconnect-btn');
+
+    function generateCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+        return code;
+    }
+
+    function showLobby() {
+        if (!onlineLobby) return;
+        onlineLobby.classList.remove('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.add('hidden');
+        const input = $('#room-code-input');
+        if (input) input.value = '';
+    }
+
+    function showWaiting(text) {
+        if (!onlineLobby) return;
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.remove('hidden');
+        onlineConnected.classList.add('hidden');
+        waitingText.textContent = text;
+    }
+
+    function showConnected() {
+        if (!onlineLobby) return;
+        onlineLobby.classList.add('hidden');
+        onlineWaiting.classList.add('hidden');
+        onlineConnected.classList.remove('hidden');
+        if (disconnectBtn) disconnectBtn.classList.remove('hidden');
+    }
+
+    // Create Room
+    if ($('#create-room-btn')) {
+        $('#create-room-btn').addEventListener('click', () => {
+            if (window.NeonSFX) NeonSFX.click();
+            isHost = true;
+            roomCode = generateCode();
+            showWaiting('Creating room...');
+            if (peer) peer.destroy();
+            peer = new Peer(PEER_PREFIX + roomCode, { debug: 0 });
+            peer.on('open', () => {
+                waitingText.textContent = 'Waiting for opponent...';
+                roomCodeDisplay.classList.remove('hidden');
+                roomCodeEl.textContent = roomCode;
+                shareHint.classList.remove('hidden');
+            });
+            peer.on('connection', (c) => {
+                conn = c;
+                conn.on('open', () => setupPongConnection());
+                conn.on('error', () => handlePongDisconnect());
+            });
+            peer.on('error', (err) => {
+                if (err.type === 'unavailable-id') {
+                    roomCode = generateCode();
+                    peer.destroy();
+                    $('#create-room-btn').click();
+                } else {
+                    waitingText.textContent = 'Connection error. Try again.';
+                }
+            });
+        });
+    }
+
+    // Join Room
+    if ($('#join-room-btn')) {
+        $('#join-room-btn').addEventListener('click', () => {
+            const input = $('#room-code-input').value.trim().toUpperCase();
+            if (!input || input.length < 3) return;
+            if (window.NeonSFX) NeonSFX.click();
+            isHost = false;
+            roomCode = input;
+            showWaiting('Connecting...');
+            if (peer) peer.destroy();
+            peer = new Peer(undefined, { debug: 0 });
+            peer.on('open', () => {
+                conn = peer.connect(PEER_PREFIX + roomCode, { reliable: true });
+                conn.on('open', () => setupPongConnection());
+                conn.on('error', () => { waitingText.textContent = 'Room not found.'; });
+            });
+            peer.on('error', (err) => {
+                waitingText.textContent = err.type === 'peer-unavailable' ? 'Room not found.' : 'Connection error.';
+            });
+        });
+    }
+
+    if ($('#room-code-input')) {
+        $('#room-code-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') $('#join-room-btn').click();
+        });
+    }
+
+    function setupPongConnection() {
+        if (window.NeonSFX) NeonSFX.gameStart();
+        showConnected();
+        onlineReady = true;
+
+        const yourMarkEl = $('#your-mark');
+        if (yourMarkEl) {
+            yourMarkEl.textContent = isHost ? (isMobile ? 'Bottom' : 'Left (P1)') : (isMobile ? 'Top' : 'Right (P2)');
+        }
+
+        if (isHost) {
+            p1Label.textContent = isMobile ? 'OPP' : 'YOU';
+            p2Label.textContent = isMobile ? 'YOU' : 'OPP';
+        } else {
+            p1Label.textContent = isMobile ? 'YOU' : 'OPP';
+            p2Label.textContent = isMobile ? 'OPP' : 'YOU';
+        }
+
+        conn.on('data', (data) => {
+            switch (data.type) {
+                case 'start':
+                    resetObjects();
+                    topScore = 0;
+                    bottomScore = 0;
+                    matchOver = false;
+                    running = true;
+                    paused = false;
+                    updateScoreboard();
+                    overlay.classList.add('hidden');
+                    if (!isHost) gameLoop(); // guest runs render loop
+                    break;
+                case 'state':
+                    // Guest receives full game state from host
+                    if (!isHost) {
+                        paddle1.x = data.p1.x; paddle1.y = data.p1.y;
+                        paddle2.x = data.p2.x; paddle2.y = data.p2.y;
+                        ball.x = data.ball.x; ball.y = data.ball.y;
+                        ball.vx = data.ball.vx; ball.vy = data.ball.vy;
+                        topScore = data.ts;
+                        bottomScore = data.bs;
+                        if (data.trail) ballTrail = data.trail;
+                        updateScoreboard();
+                    }
+                    break;
+                case 'paddle':
+                    // Host receives guest's paddle position
+                    if (isHost) {
+                        if (isMobile) {
+                            paddle1.x = data.x; // guest=top=paddle1
+                        } else {
+                            paddle2.y = data.y; // guest=right=paddle2
+                        }
+                    }
+                    break;
+                case 'end-match':
+                    matchOver = true;
+                    running = false;
+                    if (animId) cancelAnimationFrame(animId);
+                    topScore = data.ts;
+                    bottomScore = data.bs;
+                    updateScoreboard();
+                    drawFrame();
+                    showOverlay(data.message, data.icon, false);
+                    if (window.NeonSFX) {
+                        if (data.message.includes('🎉') || (isHost && data.message.includes('Bottom')) || (!isHost && data.message.includes('Top'))) {
+                            NeonSFX.win();
+                        } else {
+                            NeonSFX.gameOver();
+                        }
+                    }
+                    break;
+            }
+        });
+
+        conn.on('close', () => handlePongDisconnect());
+        conn.on('error', () => handlePongDisconnect());
+
+        // Host auto-starts
+        if (isHost) {
+            setTimeout(() => {
+                startMatch();
+                conn.send({ type: 'start' });
+            }, 500);
+        }
+    }
+
+    // Override endMatch for online — broadcast to guest
+    const _origEndMatch = endMatch;
+    endMatch = function (message) {
+        matchOver = true;
+        running = false;
+        if (animId) cancelAnimationFrame(animId);
+
+        const icon = message.includes('🎉') || message.includes('Player 1') || message.includes('Bottom') ? '🏆' : '💀';
+        if (window.NeonSFX) {
+            if (icon === '🏆') NeonSFX.win();
+            else NeonSFX.gameOver();
+        }
+
+        drawFrame();
+        showOverlay(message, icon, false);
+
+        if (mode === 'online' && conn) {
+            conn.send({
+                type: 'end-match',
+                message: message,
+                icon: icon,
+                ts: topScore,
+                bs: bottomScore
+            });
+        }
+    };
+
+    function handlePongDisconnect() {
+        conn = null;
+        onlineReady = false;
+        running = false;
+        if (animId) cancelAnimationFrame(animId);
+        showLobby();
+        if (disconnectBtn) disconnectBtn.classList.add('hidden');
+        showOverlay('Opponent disconnected', '💔', false);
+        if (window.NeonSFX) NeonSFX.gameOver();
+    }
+
+    if ($('#cancel-online-btn')) {
+        $('#cancel-online-btn').addEventListener('click', () => {
+            if (window.NeonSFX) NeonSFX.click();
+            if (peer) { peer.destroy(); peer = null; }
+            conn = null;
+            showLobby();
+        });
+    }
+
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', () => disconnectOnline());
+    }
+
+    function disconnectOnline() {
+        if (window.NeonSFX) NeonSFX.click();
+        if (conn) conn.close();
+        if (peer) { peer.destroy(); peer = null; }
+        conn = null;
+        onlineReady = false;
+        showLobby();
+        if (disconnectBtn) disconnectBtn.classList.add('hidden');
+        running = false;
+        if (animId) cancelAnimationFrame(animId);
+    }
+
+    if ($('#copy-code-btn')) {
+        $('#copy-code-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(roomCode).then(() => {
+                const btn = $('#copy-code-btn');
+                btn.textContent = '✅';
+                setTimeout(() => { btn.textContent = '📋'; }, 1500);
+            }).catch(() => {
+                const el = document.createElement('textarea');
+                el.value = roomCode;
+                document.body.appendChild(el); el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                const btn = $('#copy-code-btn');
+                btn.textContent = '✅';
+                setTimeout(() => { btn.textContent = '📋'; }, 1500);
+            });
+            if (window.NeonSFX) NeonSFX.click();
+        });
+    }
+
+    // Send paddle position to host periodically (guest only)
+    setInterval(() => {
+        if (mode === 'online' && !isHost && conn && running) {
+            if (isMobile) {
+                conn.send({ type: 'paddle', x: paddle1.x });
+            } else {
+                conn.send({ type: 'paddle', y: paddle2.y });
+            }
+        }
+    }, 50);
 
     // ===== Bootstrap =====
     window.addEventListener('DOMContentLoaded', init);
