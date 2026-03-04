@@ -535,7 +535,11 @@ body::after {
 /* ===== Responsive ===== */
 @media (max-width: 640px) {
     #app {
-        padding: 28px 16px 40px;
+        padding: 20px 12px 32px;
+    }
+
+    #header {
+        margin-bottom: 30px;
     }
 
     #logo-wrapper {
@@ -554,5 +558,24 @@ body::after {
 
     .game-card {
         padding: 24px 20px 20px;
+    }
+
+    #footer {
+        margin-top: 32px;
+    }
+
+    #mute-btn {
+        padding: 4px 8px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .card-title {
+        font-size: 0.95rem;
+    }
+
+    .card-desc {
+        font-size: 0.75rem;
     }
 }

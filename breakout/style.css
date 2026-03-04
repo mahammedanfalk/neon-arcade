@@ -352,8 +352,15 @@ body::before {
 
 /* ===== Responsive ===== */
 @media (max-width: 520px) {
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
     #breakout-canvas {
         border-radius: 8px;
+        touch-action: none;
+        cursor: default;
     }
 
     #hud {
@@ -371,5 +378,10 @@ body::before {
 
     #controls-hint {
         display: none;
+    }
+
+    #app {
+        padding: 12px;
+        gap: 10px;
     }
 }

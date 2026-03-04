@@ -480,27 +480,44 @@ body::before {
 
 /* ===== Responsive ===== */
 @media (max-width: 400px) {
-    :root {
-        --cell-size: 65px;
-        --grid-gap: 6px;
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
+    #board {
+        gap: 6px;
+        padding: 6px;
+        border-radius: 10px;
     }
 
     .tile {
-        font-size: 1.1rem;
+        font-size: 1.3rem;
+        border-radius: 6px;
     }
 
-    .tile-128,
-    .tile-256 {
-        font-size: 0.95rem;
+    #hud {
+        padding: 8px 12px;
+        gap: 8px;
     }
 
-    .tile-512,
-    .tile-1024 {
-        font-size: 0.8rem;
+    .hud-value {
+        font-size: 0.85rem;
     }
 
-    .tile-2048,
-    .tile-super {
-        font-size: 0.7rem;
+    #app {
+        padding: 12px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 320px) {
+    #board {
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .tile {
+        font-size: 1rem;
     }
 }

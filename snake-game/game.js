@@ -426,11 +426,31 @@
         startBtn.addEventListener('click', startGame);
         restartBtn.addEventListener('click', startGame);
 
-        // Mobile
+        // Mobile d-pad buttons
         $('ctrl-up').addEventListener('click', () => setDirection(DIR.UP));
         $('ctrl-down').addEventListener('click', () => setDirection(DIR.DOWN));
         $('ctrl-left').addEventListener('click', () => setDirection(DIR.LEFT));
         $('ctrl-right').addEventListener('click', () => setDirection(DIR.RIGHT));
+
+        // Swipe gestures on canvas
+        let touchStartX = 0, touchStartY = 0;
+        const wrapper = $('canvas-wrapper');
+        wrapper.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+        wrapper.addEventListener('touchend', (e) => {
+            const dx = e.changedTouches[0].clientX - touchStartX;
+            const dy = e.changedTouches[0].clientY - touchStartY;
+            const absDx = Math.abs(dx);
+            const absDy = Math.abs(dy);
+            if (Math.max(absDx, absDy) < 20) return; // too short
+            if (absDx > absDy) {
+                setDirection(dx > 0 ? DIR.RIGHT : DIR.LEFT);
+            } else {
+                setDirection(dy > 0 ? DIR.DOWN : DIR.UP);
+            }
+        }, { passive: true });
 
         // Resize
         window.addEventListener('resize', () => {

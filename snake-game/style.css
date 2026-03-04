@@ -18,7 +18,9 @@
 }
 
 /* ===== Reset & Base ===== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -49,8 +51,13 @@ body::before {
 }
 
 @keyframes bgPulse {
-    0% { opacity: 0.6; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 0.6;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 /* ===== App Layout ===== */
@@ -84,8 +91,13 @@ body::before {
 }
 
 @keyframes titleGlow {
-    0% { filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3)); }
-    100% { filter: drop-shadow(0 0 35px rgba(0, 255, 136, 0.5)); }
+    0% {
+        filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.3));
+    }
+
+    100% {
+        filter: drop-shadow(0 0 35px rgba(0, 255, 136, 0.5));
+    }
 }
 
 #subtitle {
@@ -189,8 +201,13 @@ body::before {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .overlay-content {
@@ -207,8 +224,15 @@ body::before {
 }
 
 @keyframes iconBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 .overlay-content h2 {
@@ -241,8 +265,15 @@ body::before {
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.08);
+    }
 }
 
 kbd {
@@ -337,6 +368,11 @@ kbd {
 
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
     #mobile-controls {
         display: flex;
     }
@@ -353,6 +389,10 @@ kbd {
         --canvas-size: min(360px, 88vw);
     }
 
+    #canvas-wrapper {
+        touch-action: none;
+    }
+
     #stats-bar {
         padding: 8px 18px;
         gap: 16px;
@@ -360,6 +400,11 @@ kbd {
 
     .stat-value {
         font-size: 1.1rem;
+    }
+
+    #app {
+        padding: 12px;
+        gap: 10px;
     }
 }
 

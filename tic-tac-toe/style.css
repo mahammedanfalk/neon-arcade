@@ -730,6 +730,11 @@ body::before {
 
 /* ===== Responsive ===== */
 @media (max-width: 400px) {
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
     #board {
         width: min(290px, 80vw);
         height: min(290px, 80vw);
@@ -743,5 +748,10 @@ body::before {
     #mode-selector {
         flex-wrap: wrap;
         justify-content: center;
+    }
+
+    #app {
+        padding: 12px;
+        gap: 10px;
     }
 }

@@ -7,11 +7,17 @@
     const pairsEl = document.getElementById('pairs-val');
     const timeEl = document.getElementById('time-val');
     const bestEl = document.getElementById('best-val');
+    const bestItem = document.getElementById('best-item');
     const overlay = document.getElementById('overlay');
     const overlayIcon = document.getElementById('overlay-icon');
     const overlayTitle = document.getElementById('overlay-title');
     const overlayInfo = document.getElementById('overlay-info');
     const playBtn = document.getElementById('play-btn');
+    const turnIndicator = document.getElementById('turn-indicator');
+    const turnText = document.getElementById('turn-text');
+    const p1PairsEl = document.getElementById('p1-pairs');
+    const p2PairsEl = document.getElementById('p2-pairs');
+    const hud2pItems = document.querySelectorAll('.hud-2p');
 
     const SYMBOLS = ['🚀', '⚡', '🎮', '💎', '🌟', '🔥', '🎵', '👾'];
     const COLORS = [
@@ -27,6 +33,7 @@
 
     const TOTAL_PAIRS = SYMBOLS.length;
 
+    // ===== State =====
     let cards = [];
     let flippedCards = [];
     let matchedPairs = 0;
@@ -37,7 +44,51 @@
     let locked = false;
     let bestMoves = parseInt(localStorage.getItem('memory-best') || '0', 10);
 
+    // 2P state
+    let gameMode = 'solo'; // 'solo' | '2p'
+    let currentPlayer = 1; // 1 or 2
+    let playerScores = { 1: 0, 2: 0 };
+
     if (bestMoves > 0) bestEl.textContent = bestMoves;
+
+    // ===== Mode selector =====
+    document.querySelectorAll('#mode-selector .mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (window.NeonSFX) NeonSFX.click();
+            document.querySelectorAll('#mode-selector .mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            gameMode = btn.dataset.mode;
+            updateModeUI();
+        });
+    });
+
+    function updateModeUI() {
+        if (gameMode === '2p') {
+            turnIndicator.classList.remove('hidden');
+            hud2pItems.forEach(el => el.classList.remove('hidden'));
+            bestItem.classList.add('hidden');
+        } else {
+            turnIndicator.classList.add('hidden');
+            hud2pItems.forEach(el => el.classList.add('hidden'));
+            bestItem.classList.remove('hidden');
+        }
+        updateTurnDisplay();
+    }
+
+    function updateTurnDisplay() {
+        if (gameMode !== '2p') return;
+        if (currentPlayer === 1) {
+            turnText.textContent = "Player 1's Turn";
+            turnText.style.color = '#00d4ff';
+            turnIndicator.style.borderColor = 'rgba(0, 212, 255, 0.3)';
+        } else {
+            turnText.textContent = "Player 2's Turn";
+            turnText.style.color = '#ff2d75';
+            turnIndicator.style.borderColor = 'rgba(255, 45, 117, 0.3)';
+        }
+        p1PairsEl.textContent = playerScores[1];
+        p2PairsEl.textContent = playerScores[2];
+    }
 
     // ===== Shuffle =====
     function shuffle(arr) {
@@ -121,6 +172,13 @@
                 b.matched = true;
                 matchedPairs++;
                 pairsEl.textContent = `${matchedPairs}/${TOTAL_PAIRS}`;
+
+                if (gameMode === '2p') {
+                    playerScores[currentPlayer]++;
+                    updateTurnDisplay();
+                    // Current player gets another turn on a match — don't switch
+                }
+
                 flippedCards = [];
                 locked = false;
                 if (window.NeonSFX) NeonSFX.score();
@@ -141,6 +199,12 @@
                     b.el.classList.remove('flipped', 'shake');
                     flippedCards = [];
                     locked = false;
+
+                    // Switch player in 2P mode on miss
+                    if (gameMode === '2p') {
+                        currentPlayer = currentPlayer === 1 ? 2 : 1;
+                        updateTurnDisplay();
+                    }
                 }, 400);
             }, 600);
         }
@@ -178,9 +242,12 @@
         flippedCards = [];
         locked = false;
         gameRunning = true;
+        currentPlayer = 1;
+        playerScores = { 1: 0, 2: 0 };
         movesEl.textContent = '0';
         pairsEl.textContent = `0/${TOTAL_PAIRS}`;
         timeEl.textContent = '0:00';
+        updateModeUI();
         buildBoard();
         stopTimer();
         startTimer();
@@ -193,21 +260,54 @@
         stopTimer();
         const elapsed = getElapsedTime();
 
-        if (bestMoves === 0 || moves < bestMoves) {
-            bestMoves = moves;
-            localStorage.setItem('memory-best', bestMoves.toString());
-            bestEl.textContent = bestMoves;
+        if (gameMode === 'solo') {
+            if (bestMoves === 0 || moves < bestMoves) {
+                bestMoves = moves;
+                localStorage.setItem('memory-best', bestMoves.toString());
+                bestEl.textContent = bestMoves;
+            }
+
+            if (window.NeonSFX) NeonSFX.win();
+
+            overlayIcon.textContent = '🏆';
+            overlayTitle.textContent = 'PERFECT!';
+            overlayInfo.innerHTML = `
+                Moves: <strong style="color:#00ff88">${moves}</strong><br>
+                Time: <strong style="color:#00d4ff">${formatTime(elapsed)}</strong>
+                ${moves <= bestMoves ? '<br><span style="color:#ffe600;">★ NEW BEST ★</span>' : ''}
+            `;
+        } else {
+            // 2P Mode — determine winner
+            const p1 = playerScores[1];
+            const p2 = playerScores[2];
+            if (window.NeonSFX) NeonSFX.win();
+
+            if (p1 > p2) {
+                overlayIcon.textContent = '🎉';
+                overlayTitle.textContent = 'PLAYER 1 WINS!';
+                overlayInfo.innerHTML = `
+                    <span style="color:#00d4ff">Player 1: <strong>${p1}</strong> pairs</span><br>
+                    <span style="color:#ff2d75">Player 2: <strong>${p2}</strong> pairs</span><br>
+                    Time: <strong style="color:#00ff88">${formatTime(elapsed)}</strong>
+                `;
+            } else if (p2 > p1) {
+                overlayIcon.textContent = '🎉';
+                overlayTitle.textContent = 'PLAYER 2 WINS!';
+                overlayInfo.innerHTML = `
+                    <span style="color:#00d4ff">Player 1: <strong>${p1}</strong> pairs</span><br>
+                    <span style="color:#ff2d75">Player 2: <strong>${p2}</strong> pairs</span><br>
+                    Time: <strong style="color:#00ff88">${formatTime(elapsed)}</strong>
+                `;
+            } else {
+                overlayIcon.textContent = '🤝';
+                overlayTitle.textContent = "IT'S A TIE!";
+                overlayInfo.innerHTML = `
+                    Both players matched <strong style="color:#ffe600">${p1}</strong> pairs!<br>
+                    Time: <strong style="color:#00ff88">${formatTime(elapsed)}</strong>
+                `;
+            }
         }
 
-        if (window.NeonSFX) NeonSFX.win();
-
-        overlayIcon.textContent = '🏆';
-        overlayTitle.textContent = 'PERFECT!';
-        overlayInfo.innerHTML = `
-            Moves: <strong style="color:#00ff88">${moves}</strong><br>
-            Time: <strong style="color:#00d4ff">${formatTime(elapsed)}</strong>
-            ${moves <= bestMoves ? '<br><span style="color:#ffe600;">★ NEW BEST ★</span>' : ''}
-        `;
         playBtn.textContent = 'PLAY AGAIN';
         overlay.classList.remove('hidden');
     }

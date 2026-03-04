@@ -132,6 +132,62 @@ body::before {
     margin-top: 2px;
 }
 
+/* ===== Mode Selector ===== */
+#mode-selector {
+    display: flex;
+    gap: 8px;
+}
+
+.mode-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 7px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mode-btn:hover {
+    border-color: rgba(0, 255, 136, 0.2);
+    color: var(--text-primary);
+}
+
+.mode-btn.active {
+    border-color: rgba(0, 255, 136, 0.4);
+    background: rgba(0, 255, 136, 0.08);
+    color: var(--neon-green);
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.12);
+}
+
+.mode-icon {
+    font-size: 0.9rem;
+}
+
+/* ===== Turn Indicator ===== */
+#turn-indicator {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 6px 20px;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 30px;
+    background: rgba(0, 212, 255, 0.06);
+    transition: all 0.3s ease;
+}
+
+.hidden {
+    display: none !important;
+}
+
 #hud {
     display: flex;
     gap: 14px;
@@ -398,6 +454,11 @@ body::before {
 }
 
 @media (max-width: 400px) {
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
     #board {
         gap: 6px;
     }
@@ -417,5 +478,21 @@ body::before {
 
     .hud-value {
         font-size: 0.85rem;
+    }
+
+    #app {
+        padding: 12px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 320px) {
+    #board {
+        gap: 4px;
+        max-width: 280px;
+    }
+
+    .card-face-back {
+        font-size: 1.2rem;
     }
 }

@@ -358,8 +358,14 @@ body::before {
 
 /* ===== Responsive ===== */
 @media (max-width: 500px) {
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
     #pong-canvas {
         border-radius: 8px;
+        touch-action: none;
     }
 
     #scoreboard {
@@ -371,5 +377,14 @@ body::before {
     #difficulty-selector {
         flex-wrap: wrap;
         justify-content: center;
+    }
+
+    #app {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    #controls-hint {
+        display: none;
     }
 }

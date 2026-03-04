@@ -113,6 +113,41 @@
         });
         window.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
+        // ===== Touch controls =====
+        const activeTouches = {}; // track touches by side: { left: touchY, right: touchY }
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleTouches(e.touches);
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handleTouches(e.touches);
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        function handleTouches(touches) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleY = CANVAS_H / rect.height;
+            const midX = rect.left + rect.width / 2;
+            for (let i = 0; i < touches.length; i++) {
+                const t = touches[i];
+                const gameY = (t.clientY - rect.top) * scaleY - PADDLE_H / 2;
+                const clampedY = Math.max(0, Math.min(CANVAS_H - PADDLE_H, gameY));
+                if (t.clientX < midX) {
+                    leftPaddle.y = clampedY;
+                } else {
+                    if (mode === '2p') {
+                        rightPaddle.y = clampedY;
+                    }
+                }
+            }
+        }
+
         // Canvas scaling
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
@@ -195,10 +230,17 @@
         overlayTitle.textContent = title;
         overlayIcon.textContent = icon;
         if (showControls) {
-            overlayInfo.innerHTML = `
-                <span class="key">W</span> / <span class="key">S</span> — Left Paddle<br>
-                <span class="key">↑</span> / <span class="key">↓</span> — Right Paddle${mode === 'ai' ? '' : ' (2P)'}
-            `;
+            const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            if (isMobile) {
+                overlayInfo.innerHTML = `
+                    Touch & drag on the left side to move your paddle${mode === '2p' ? '<br>Right side controls Player 2' : ''}
+                `;
+            } else {
+                overlayInfo.innerHTML = `
+                    <span class="key">W</span> / <span class="key">S</span> — Left Paddle<br>
+                    <span class="key">↑</span> / <span class="key">↓</span> — Right Paddle${mode === 'ai' ? '' : ' (2P)'}
+                `;
+            }
         } else {
             overlayInfo.textContent = '';
         }

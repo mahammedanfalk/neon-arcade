@@ -345,6 +345,11 @@ body::before {
 }
 
 @media (max-width: 520px) {
+    body {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
     #game-canvas {
         border-radius: 8px;
     }
@@ -364,5 +369,10 @@ body::before {
 
     #controls-hint {
         display: none;
+    }
+
+    #app {
+        padding: 12px;
+        gap: 10px;
     }
 }

@@ -29,6 +29,21 @@
             <div id="subtitle">NEON EDITION</div>
         </header>
 
+        <!-- Mode selector -->
+        <div id="mode-selector">
+            <button class="mode-btn active" id="mode-solo" data-mode="solo">
+                <span class="mode-icon">👤</span> Solo
+            </button>
+            <button class="mode-btn" id="mode-2p" data-mode="2p">
+                <span class="mode-icon">👥</span> 2 Player
+            </button>
+        </div>
+
+        <!-- Player turn indicator (hidden in solo mode) -->
+        <div id="turn-indicator" class="hidden">
+            <span id="turn-text">Player 1's Turn</span>
+        </div>
+
         <div id="hud">
             <div class="hud-item">
                 <span class="hud-label">MOVES</span>
@@ -42,9 +57,18 @@
                 <span class="hud-label">TIME</span>
                 <span class="hud-value" id="time-val">0:00</span>
             </div>
-            <div class="hud-item">
+            <div class="hud-item" id="best-item">
                 <span class="hud-label">BEST</span>
                 <span class="hud-value" id="best-val">—</span>
+            </div>
+            <!-- 2P Score items (hidden in solo mode) -->
+            <div class="hud-item hud-2p hidden">
+                <span class="hud-label">P1 PAIRS</span>
+                <span class="hud-value" id="p1-pairs" style="color:#00d4ff;">0</span>
+            </div>
+            <div class="hud-item hud-2p hidden">
+                <span class="hud-label">P2 PAIRS</span>
+                <span class="hud-value" id="p2-pairs" style="color:#ff2d75;">0</span>
             </div>
         </div>
 

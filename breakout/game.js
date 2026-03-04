@@ -515,6 +515,25 @@
         launchBall();
     });
 
+    // Touch-drag on canvas for paddle
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (ballAttached) launchBall();
+        handleCanvasTouch(e.touches[0]);
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        handleCanvasTouch(e.touches[0]);
+    }, { passive: false });
+
+    function handleCanvasTouch(touch) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = W / rect.width;
+        paddle.x = (touch.clientX - rect.left) * scaleX - paddle.w / 2;
+        paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
+    }
+
     // Touch
     function bindTouch(id, action) {
         const btn = document.getElementById(id);
