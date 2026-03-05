@@ -26,6 +26,7 @@
     let roomCode = '';
     let oppRound = 0;
     let oppAlive = true;
+    let myTurn = false; // online turn-based: is it my turn?
 
     // DOM
     const allButtons = document.querySelectorAll('.simon-btn');
@@ -98,9 +99,19 @@
         });
 
         setTimeout(() => {
-            accepting = true;
             playerIndex = 0;
-            statusEl.textContent = gameMode === 'online' ? 'Your turn! Opponent is also playing' : 'Your turn! Repeat the pattern';
+            if (gameMode === 'online') {
+                if (myTurn) {
+                    accepting = true;
+                    statusEl.textContent = `Your turn! Repeat ${sequence.length} taps`;
+                } else {
+                    accepting = false;
+                    statusEl.textContent = 'Opponent\'s turn — watch...';
+                }
+            } else {
+                accepting = true;
+                statusEl.textContent = 'Your turn! Repeat the pattern';
+            }
         }, sequence.length * delay + 500 + dur);
     }
 
@@ -111,13 +122,20 @@
         gameActive = true;
         oppRound = 0;
         oppAlive = true;
+        myTurn = false;
         roundEl.textContent = '0';
         if (oppRoundEl) oppRoundEl.textContent = '0';
         startBtn.textContent = 'RESTART';
 
-        if (gameMode === 'online' && !isHost) {
-            // Guest waits for host to send first round
-            statusEl.textContent = 'Waiting for pattern...';
+        if (gameMode === 'online') {
+            // Turn-based: P1 (host) goes first on odd rounds, P2 (guest) on even rounds
+            if (isHost) {
+                myTurn = true;
+                nextRound();
+            } else {
+                myTurn = false;
+                statusEl.textContent = 'Opponent\'s turn — watch and wait...';
+            }
         } else {
             nextRound();
         }
@@ -129,16 +147,19 @@
         roundEl.textContent = round;
 
         const numBtns = DIFF[difficulty].buttons;
-        if (gameMode === 'online' && isHost) {
-            // Host generates and broadcasts next color
-            const nextColor = Math.floor(Math.random() * numBtns);
-            sequence.push(nextColor);
-            if (conn) conn.send({ type: 'next-round', color: nextColor, round: round });
-        } else if (gameMode !== 'online') {
+        if (gameMode === 'online') {
+            if (isHost) {
+                // Host always generates and sends
+                const nextColor = Math.floor(Math.random() * numBtns);
+                sequence.push(nextColor);
+                if (conn) conn.send({ type: 'next-round', sequence: [...sequence], round: round });
+            }
+            // Show sequence to active player, spectator watches
+            showSequence();
+        } else {
             sequence.push(Math.floor(Math.random() * numBtns));
+            showSequence();
         }
-
-        showSequence();
     }
 
     // Player clicks a button
@@ -146,6 +167,8 @@
         const handler = (e) => {
             e.preventDefault();
             if (!accepting || !gameActive) return;
+            // In online mode, only accept input if it's my turn
+            if (gameMode === 'online' && !myTurn) return;
 
             lightButton(index, 200);
 
@@ -159,20 +182,18 @@
 
                     if (gameMode === 'online' && conn) {
                         conn.send({ type: 'round-complete', round: round });
-                    }
-
-                    // In online mode, only host triggers next round
-                    if (gameMode === 'online') {
+                        // Switch turn to opponent
+                        myTurn = false;
                         if (isHost) {
+                            // Host still needs to generate next round and send
                             setTimeout(() => {
-                                if (gameActive && oppAlive) nextRound();
-                                else if (gameActive && !oppAlive) {
-                                    // Opponent already failed, you win!
-                                    handleOnlineWin();
+                                if (gameActive && oppAlive) {
+                                    nextRound();
+                                    statusEl.textContent = 'Opponent\'s turn — watch...';
                                 }
                             }, 800);
                         } else {
-                            statusEl.textContent = 'Waiting for next round...';
+                            statusEl.textContent = 'Opponent\'s turn — watch...';
                         }
                     } else {
                         setTimeout(nextRound, 800);
@@ -429,6 +450,7 @@
         // Reset
         gameActive = false;
         accepting = false;
+        myTurn = false;
         sequence = [];
         round = 0;
         oppRound = 0;
@@ -448,20 +470,38 @@
                         b.classList.remove('active');
                         if (b.dataset.diff === difficulty) b.classList.add('active');
                     });
+                    updateBoardLayout();
                     startGame();
                     break;
                 case 'next-round':
-                    // Guest receives next color from host
+                    // Guest receives full sequence from host
                     if (!isHost) {
-                        sequence.push(data.color);
+                        sequence = data.sequence;
                         round = data.round;
                         roundEl.textContent = round;
+                        // Check if it's my turn (guest plays even rounds: 2, 4, 6...)
+                        const isGuestTurn = (round % 2 === 0);
+                        myTurn = isGuestTurn;
                         showSequence();
+                        if (!myTurn) {
+                            // Not my turn — just watch the sequence
+                            statusEl.textContent = 'Opponent\'s turn — watch the pattern...';
+                        }
+                    } else {
+                        // Host: check if it's my turn (host plays odd rounds: 1, 3, 5...)
+                        myTurn = (round % 2 === 1);
                     }
                     break;
                 case 'round-complete':
                     oppRound = data.round;
                     if (oppRoundEl) oppRoundEl.textContent = oppRound;
+                    // Opponent completed their turn, now it's my turn
+                    if (isHost) {
+                        // Host generates next round
+                        setTimeout(() => {
+                            if (gameActive) nextRound();
+                        }, 800);
+                    }
                     break;
                 case 'player-failed':
                     oppAlive = false;
@@ -471,15 +511,16 @@
                         // I already failed too — compare
                         const myFinal = round - 1;
                         if (myFinal > oppRound) {
-                            statusEl.textContent = `🏆 You Win! Round ${myFinal} vs ${oppRound}`;
+                            statusEl.textContent = `\ud83c\udfc6 You Win! Round ${myFinal} vs ${oppRound}`;
                             if (window.NeonSFX) NeonSFX.win();
                         } else if (myFinal < oppRound) {
-                            statusEl.textContent = `💀 You Lose! Round ${myFinal} vs ${oppRound}`;
+                            statusEl.textContent = `\ud83d\udc80 You Lose! Round ${myFinal} vs ${oppRound}`;
                         } else {
-                            statusEl.textContent = `🤝 Tie! Both reached round ${myFinal}`;
+                            statusEl.textContent = `\ud83e\udd1d Tie! Both reached round ${myFinal}`;
                         }
                     } else {
-                        statusEl.textContent = 'Opponent failed! Keep going! 🔥';
+                        // Opponent failed, I win!
+                        handleOnlineWin();
                     }
                     break;
             }
