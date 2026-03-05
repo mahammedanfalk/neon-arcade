@@ -200,6 +200,77 @@ body::after {
     font-size: 1.3rem;
 }
 
+/* ===== Filter Bar ===== */
+#filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    padding: 7px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.filter-btn:hover {
+    border-color: rgba(0, 212, 255, 0.3);
+    color: var(--neon-blue);
+}
+
+.filter-btn.active {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    background: rgba(0, 255, 136, 0.08);
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.1);
+}
+
+/* ===== Favorite Button ===== */
+.fav-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 0.4;
+    transition: all 0.25s ease;
+    filter: grayscale(1);
+    padding: 4px;
+    line-height: 1;
+}
+
+.fav-btn:hover {
+    opacity: 0.8;
+    transform: scale(1.2);
+}
+
+.fav-btn.fav-active {
+    opacity: 1;
+    filter: none;
+    color: #ff2d75;
+    text-shadow: 0 0 10px rgba(255, 45, 117, 0.5);
+}
+
+/* ===== Solo tag ===== */
+.tag-solo {
+    background: rgba(180, 77, 255, 0.1);
+    color: #b44dff;
+    border: 1px solid rgba(180, 77, 255, 0.2);
+}
+
 #games-section {
     margin-bottom: 48px;
 }

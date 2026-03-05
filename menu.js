@@ -2,13 +2,98 @@
 (function () {
     'use strict';
 
+    // ===== Favorites (localStorage) =====
+    const FAV_KEY = 'neon-arcade-favorites';
+    let favorites = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+
+    function saveFavorites() {
+        localStorage.setItem(FAV_KEY, JSON.stringify(favorites));
+    }
+
+    function toggleFavorite(gameId) {
+        const idx = favorites.indexOf(gameId);
+        if (idx >= 0) {
+            favorites.splice(idx, 1);
+        } else {
+            favorites.push(gameId);
+        }
+        saveFavorites();
+        updateFavButtons();
+        // If fav filter is active, re-filter
+        const activeFilter = document.querySelector('.filter-btn.active');
+        if (activeFilter && activeFilter.dataset.filter === 'fav') {
+            applyFilter('fav');
+        }
+    }
+
+    function updateFavButtons() {
+        document.querySelectorAll('.fav-btn').forEach(btn => {
+            const gameId = btn.dataset.game;
+            const isFav = favorites.includes(gameId);
+            btn.classList.toggle('fav-active', isFav);
+            btn.textContent = isFav ? '♥' : '♡';
+        });
+    }
+
+    // ===== Filtering =====
+    let currentFilter = 'all';
+
+    function applyFilter(filter) {
+        currentFilter = filter;
+        const grid = document.getElementById('games-grid');
+        if (!grid) return;
+
+        const cards = Array.from(grid.querySelectorAll('.game-card'));
+
+        // Sort: favorites first (unless filtering by specific mode)
+        if (filter === 'all' || filter === 'fav') {
+            cards.sort((a, b) => {
+                const aFav = favorites.includes(a.querySelector('.fav-btn')?.dataset.game) ? 0 : 1;
+                const bFav = favorites.includes(b.querySelector('.fav-btn')?.dataset.game) ? 0 : 1;
+                return aFav - bFav;
+            });
+            // Re-append in sorted order
+            cards.forEach(card => grid.appendChild(card));
+        }
+
+        cards.forEach(card => {
+            const modes = (card.dataset.modes || '').split(' ');
+            let show = true;
+
+            if (filter === 'fav') {
+                const gameId = card.querySelector('.fav-btn')?.dataset.game;
+                show = favorites.includes(gameId);
+            } else if (filter !== 'all') {
+                show = modes.includes(filter);
+            }
+
+            card.style.display = show ? '' : 'none';
+            if (show) {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(10px)';
+                requestAnimationFrame(() => {
+                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = '';
+                });
+            }
+        });
+    }
+
+    // ===== Init =====
     // Tilt effect + hover SFX on playable cards
     document.querySelectorAll('.game-card.playable').forEach((card) => {
         card.addEventListener('mouseenter', () => {
             if (window.NeonSFX) NeonSFX.hover();
         });
 
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+            // Don't navigate if clicking fav button
+            if (e.target.classList.contains('fav-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
             if (window.NeonSFX) NeonSFX.click();
         });
 
@@ -53,6 +138,31 @@
             muteBtn.style.color = muted ? '#ff2d75' : '#00ff88';
         });
     }
+
+    // Favorite buttons
+    document.querySelectorAll('.fav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (window.NeonSFX) NeonSFX.click();
+            toggleFavorite(btn.dataset.game);
+        });
+    });
+
+    updateFavButtons();
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (window.NeonSFX) NeonSFX.click();
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilter(btn.dataset.filter);
+        });
+    });
+
+    // Initial sort: favorites first
+    applyFilter('all');
 
     // Simple toast notification
     function showToast(message) {

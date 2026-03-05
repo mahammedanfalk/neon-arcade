@@ -39,17 +39,30 @@
             <h2 class="section-title">
                 <span class="section-icon">🎮</span> Available Games
             </h2>
+
+            <!-- Filter Bar -->
+            <div id="filter-bar">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="fav">⭐ Favorites</button>
+                <button class="filter-btn" data-filter="solo">Solo</button>
+                <button class="filter-btn" data-filter="ai">vs AI</button>
+                <button class="filter-btn" data-filter="local-mp">Local 2P</button>
+                <button class="filter-btn" data-filter="online">Online</button>
+            </div>
+
             <div id="games-grid">
                 <!-- Snake -->
-                <a href="snake-game/index.html" class="game-card playable" id="card-snake">
+                <a href="snake-game/index.html" class="game-card playable" id="card-snake" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="snake" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🐍</div>
                     <h3 class="card-title">Snake</h3>
                     <p class="card-desc">Guide the neon serpent, eat to grow, don't hit the walls!</p>
                     <div class="card-tags">
                         <span class="tag tag-arcade">Arcade</span>
                         <span class="tag tag-classic">Classic</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -57,15 +70,19 @@
                 </a>
 
                 <!-- Tic-Tac-Toe -->
-                <a href="tic-tac-toe/index.html" class="game-card playable" id="card-ttt">
+                <a href="tic-tac-toe/index.html" class="game-card playable" id="card-ttt"
+                    data-modes="ai local-mp online">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="ttt" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">❌⭕</div>
                     <h3 class="card-title">Tic-Tac-Toe</h3>
                     <p class="card-desc">Classic X vs O — challenge the AI or duel a friend locally.</p>
                     <div class="card-tags">
                         <span class="tag tag-puzzle">Puzzle</span>
-                        <span class="tag tag-strategy">Strategy</span>
+                        <span class="tag tag-strategy">vs AI</span>
+                        <span class="tag tag-multiplayer">2-Player</span>
+                        <span class="tag tag-multiplayer">Online</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -73,14 +90,16 @@
                 </a>
 
                 <!-- Pong -->
-                <a href="pong/index.html" class="game-card playable" id="card-pong">
+                <a href="pong/index.html" class="game-card playable" id="card-pong" data-modes="ai local-mp online">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="pong" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🏓</div>
                     <h3 class="card-title">Pong</h3>
                     <p class="card-desc">The OG arcade duel. Neon paddles, glowing ball — play solo or vs a friend.</p>
                     <div class="card-tags">
                         <span class="tag tag-arcade">Arcade</span>
+                        <span class="tag tag-strategy">vs AI</span>
                         <span class="tag tag-multiplayer">2-Player</span>
                         <span class="tag tag-multiplayer">Online</span>
                     </div>
@@ -90,32 +109,35 @@
                 </a>
 
                 <!-- Tetris -->
-                <a href="tetris/index.html" class="game-card playable" id="card-tetris">
+                <a href="tetris/index.html" class="game-card playable" id="card-tetris" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="tetris" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🧱</div>
                     <h3 class="card-title">Tetris</h3>
                     <p class="card-desc">Stack falling neon blocks — clear lines, chase combos, survive the speed.</p>
                     <div class="card-tags">
                         <span class="tag tag-puzzle">Puzzle</span>
                         <span class="tag tag-classic">Classic</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
                     </div>
                 </a>
-                </a>
 
                 <!-- Breakout -->
-                <a href="breakout/index.html" class="game-card playable" id="card-breakout">
+                <a href="breakout/index.html" class="game-card playable" id="card-breakout" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="breakout" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">💥</div>
                     <h3 class="card-title">Breakout</h3>
                     <p class="card-desc">Smash neon bricks with a bouncing beam. Powerups, combos, and chaos.</p>
                     <div class="card-tags">
                         <span class="tag tag-arcade">Arcade</span>
                         <span class="tag tag-action">Action</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -123,15 +145,17 @@
                 </a>
 
                 <!-- Space Invaders -->
-                <a href="space-invaders/index.html" class="game-card playable" id="card-invaders">
+                <a href="space-invaders/index.html" class="game-card playable" id="card-invaders" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="invaders" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">👾</div>
                     <h3 class="card-title">Space Invaders</h3>
                     <p class="card-desc">Defend Earth from waves of neon aliens. Shoot fast, dodge faster.</p>
                     <div class="card-tags">
                         <span class="tag tag-arcade">Arcade</span>
                         <span class="tag tag-shooter">Shooter</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -139,15 +163,17 @@
                 </a>
 
                 <!-- 2048 -->
-                <a href="2048/index.html" class="game-card playable" id="card-2048">
+                <a href="2048/index.html" class="game-card playable" id="card-2048" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="2048" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🔢</div>
                     <h3 class="card-title">2048</h3>
                     <p class="card-desc">Slide and merge glowing tiles. Simple to learn, impossible to master.</p>
                     <div class="card-tags">
                         <span class="tag tag-puzzle">Puzzle</span>
                         <span class="tag tag-strategy">Strategy</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -155,9 +181,10 @@
                 </a>
 
                 <!-- Flappy Bird -->
-                <a href="flappy/index.html" class="game-card playable" id="card-flappy">
+                <a href="flappy/index.html" class="game-card playable" id="card-flappy" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="flappy" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🐦</div>
                     <h3 class="card-title">Flappy Bird</h3>
                     <p class="card-desc">Tap to flap through neon pipes. One hit and it's over — how far can you fly?
@@ -165,6 +192,7 @@
                     <div class="card-tags">
                         <span class="tag tag-arcade">Arcade</span>
                         <span class="tag tag-action">Action</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -172,9 +200,10 @@
                 </a>
 
                 <!-- Minesweeper -->
-                <a href="minesweeper/index.html" class="game-card playable" id="card-minesweeper">
+                <a href="minesweeper/index.html" class="game-card playable" id="card-minesweeper" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="minesweeper" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">💣</div>
                     <h3 class="card-title">Minesweeper</h3>
                     <p class="card-desc">Sweep the neon grid — flag the mines, clear the field. Three difficulty modes.
@@ -182,6 +211,7 @@
                     <div class="card-tags">
                         <span class="tag tag-puzzle">Puzzle</span>
                         <span class="tag tag-classic">Classic</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -189,14 +219,17 @@
                 </a>
 
                 <!-- Connect Four -->
-                <a href="connect-four/index.html" class="game-card playable" id="card-connect4">
+                <a href="connect-four/index.html" class="game-card playable" id="card-connect4"
+                    data-modes="ai local-mp online">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="connect4" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🔴🟡</div>
                     <h3 class="card-title">Connect Four</h3>
                     <p class="card-desc">Drop discs in the grid — line up four to win. Challenge the AI or a friend.</p>
                     <div class="card-tags">
                         <span class="tag tag-strategy">Strategy</span>
+                        <span class="tag tag-strategy">vs AI</span>
                         <span class="tag tag-multiplayer">2-Player</span>
                         <span class="tag tag-multiplayer">Online</span>
                     </div>
@@ -206,9 +239,10 @@
                 </a>
 
                 <!-- Whack-a-Mole -->
-                <a href="whack-a-mole/index.html" class="game-card playable" id="card-whack">
+                <a href="whack-a-mole/index.html" class="game-card playable" id="card-whack" data-modes="solo online">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="whack" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🔨</div>
                     <h3 class="card-title">Whack-a-Mole</h3>
                     <p class="card-desc">Tap the glowing moles before they hide. Combos and golden moles = big points!
@@ -216,6 +250,7 @@
                     <div class="card-tags">
                         <span class="tag tag-arcade">Arcade</span>
                         <span class="tag tag-action">Action</span>
+                        <span class="tag tag-solo">Solo</span>
                         <span class="tag tag-multiplayer">Online</span>
                     </div>
                     <div class="card-play-hint">
@@ -224,15 +259,17 @@
                 </a>
 
                 <!-- Wordle -->
-                <a href="wordle/index.html" class="game-card playable" id="card-wordle">
+                <a href="wordle/index.html" class="game-card playable" id="card-wordle" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="wordle" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">📝</div>
                     <h3 class="card-title">Wordle</h3>
                     <p class="card-desc">Guess the 5-letter word in 6 tries. Green, yellow, gray — crack the code!</p>
                     <div class="card-tags">
                         <span class="tag tag-puzzle">Puzzle</span>
                         <span class="tag tag-strategy">Strategy</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
@@ -240,14 +277,17 @@
                 </a>
 
                 <!-- Memory Match -->
-                <a href="memory/index.html" class="game-card playable" id="card-memory">
+                <a href="memory/index.html" class="game-card playable" id="card-memory"
+                    data-modes="solo local-mp online">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="memory" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🃏</div>
                     <h3 class="card-title">Memory Match</h3>
                     <p class="card-desc">Flip neon cards and find matching pairs. Solo, 2-player, or online!</p>
                     <div class="card-tags">
                         <span class="tag tag-puzzle">Puzzle</span>
+                        <span class="tag tag-solo">Solo</span>
                         <span class="tag tag-multiplayer">2-Player</span>
                         <span class="tag tag-multiplayer">Online</span>
                     </div>
@@ -257,15 +297,17 @@
                 </a>
 
                 <!-- Simon Says -->
-                <a href="simon-says/index.html" class="game-card playable" id="card-simon">
+                <a href="simon-says/index.html" class="game-card playable" id="card-simon" data-modes="solo online">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="simon" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">🎵</div>
                     <h3 class="card-title">Simon Says</h3>
                     <p class="card-desc">Watch the neon pattern, repeat it back. How far can your memory take you?</p>
                     <div class="card-tags">
                         <span class="tag tag-puzzle">Puzzle</span>
                         <span class="tag tag-classic">Memory</span>
+                        <span class="tag tag-solo">Solo</span>
                         <span class="tag tag-multiplayer">Online</span>
                     </div>
                     <div class="card-play-hint">
@@ -274,15 +316,17 @@
                 </a>
 
                 <!-- Typing Speed -->
-                <a href="typing-speed/index.html" class="game-card playable" id="card-typing">
+                <a href="typing-speed/index.html" class="game-card playable" id="card-typing" data-modes="solo">
                     <div class="card-glow"></div>
                     <div class="card-badge badge-live">PLAY NOW</div>
+                    <button class="fav-btn" data-game="typing" aria-label="Favorite" title="Favorite">♡</button>
                     <div class="card-icon">⌨️</div>
                     <h3 class="card-title">Typing Speed</h3>
                     <p class="card-desc">Type as fast as you can! Track your WPM and accuracy in neon style.</p>
                     <div class="card-tags">
                         <span class="tag tag-arcade">Arcade</span>
                         <span class="tag tag-action">Speed</span>
+                        <span class="tag tag-solo">Solo</span>
                     </div>
                     <div class="card-play-hint">
                         <span class="play-arrow">▶</span> Click to Play
