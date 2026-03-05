@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description"
+        content="Neon Simon Says — Repeat the glowing color sequence. How far can your memory take you?">
+    <title>Simon Says — Neon Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="top-bar">
+            <a href="../index.html" id="back-link"><span>←</span> BACK TO ARCADE</a>
+            <button id="mute-btn" aria-label="Toggle Sound" title="Toggle Sound">
+                <span id="mute-icon">🔊</span><span class="mute-label">SFX</span>
+            </button>
+        </div>
+
+        <header id="header">
+            <h1 id="title">SIMON SAYS</h1>
+            <div id="subtitle">NEON EDITION</div>
+        </header>
+
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">ROUND</span>
+                <span class="hud-value" id="round-val">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">BEST</span>
+                <span class="hud-value" id="best-val">0</span>
+            </div>
+        </div>
+
+        <div id="board">
+            <button class="simon-btn" id="btn-0" data-index="0"></button>
+            <button class="simon-btn" id="btn-1" data-index="1"></button>
+            <button class="simon-btn" id="btn-2" data-index="2"></button>
+            <button class="simon-btn" id="btn-3" data-index="3"></button>
+        </div>
+
+        <div id="status" class="status-text">Press START to begin</div>
+
+        <button id="start-btn" class="neon-btn">START</button>
+
+        <footer id="footer">
+            <p>Watch the pattern, repeat it back — how far can you go?</p>
+            <p style="margin-top:6px;font-size:0.75rem;opacity:0.6;">Created by Mahammed Anfal Kurka</p>
+        </footer>
+    </div>
+
+    <script src="../sfx.js"></script>
+    <script src="game.js"></script>
+</body>
+
+</html>

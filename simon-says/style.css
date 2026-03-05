@@ -1,0 +1,290 @@
+/* ===== Simon Says — Neon Edition ===== */
+:root {
+    --bg-primary: #060614;
+    --bg-card: rgba(15, 15, 35, 0.85);
+    --text-primary: #e4e4f0;
+    --text-dim: rgba(228, 228, 240, 0.5);
+    --neon-green: #00ff88;
+    --neon-blue: #00d4ff;
+    --neon-pink: #ff2d75;
+    --neon-purple: #b44dff;
+    --neon-yellow: #ffe600;
+    --neon-orange: #ff8a00;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 30% 30%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 70%, rgba(255, 45, 117, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+#app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 400px;
+    padding: 16px 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Top Bar */
+#top-bar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#back-link {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--neon-green);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: var(--transition);
+}
+
+#back-link:hover {
+    opacity: 1;
+}
+
+#mute-btn {
+    background: none;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--neon-green);
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+}
+
+.mute-label {
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+}
+
+/* Header */
+#header {
+    text-align: center;
+}
+
+#title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--neon-green), var(--neon-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 18px rgba(0, 255, 136, 0.3));
+}
+
+#subtitle {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.4em;
+    color: var(--text-dim);
+    margin-top: 2px;
+}
+
+/* HUD */
+#hud {
+    display: flex;
+    gap: 24px;
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    padding: 10px 28px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hud-item {
+    text-align: center;
+}
+
+.hud-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.45rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    display: block;
+}
+
+.hud-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--neon-green);
+}
+
+/* Board — 2x2 grid */
+#board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 280px;
+    height: 280px;
+}
+
+.simon-btn {
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+    outline: none;
+}
+
+.simon-btn:active {
+    transform: scale(0.95);
+}
+
+/* Colors */
+#btn-0 {
+    background: rgba(0, 255, 136, 0.15);
+    border-color: rgba(0, 255, 136, 0.3);
+}
+
+#btn-0.lit {
+    background: rgba(0, 255, 136, 0.6);
+    box-shadow: 0 0 40px rgba(0, 255, 136, 0.5), inset 0 0 20px rgba(0, 255, 136, 0.3);
+    border-color: var(--neon-green);
+}
+
+#btn-1 {
+    background: rgba(255, 45, 117, 0.15);
+    border-color: rgba(255, 45, 117, 0.3);
+}
+
+#btn-1.lit {
+    background: rgba(255, 45, 117, 0.6);
+    box-shadow: 0 0 40px rgba(255, 45, 117, 0.5), inset 0 0 20px rgba(255, 45, 117, 0.3);
+    border-color: var(--neon-pink);
+}
+
+#btn-2 {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+#btn-2.lit {
+    background: rgba(0, 212, 255, 0.6);
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.5), inset 0 0 20px rgba(0, 212, 255, 0.3);
+    border-color: var(--neon-blue);
+}
+
+#btn-3 {
+    background: rgba(255, 230, 0, 0.15);
+    border-color: rgba(255, 230, 0, 0.3);
+}
+
+#btn-3.lit {
+    background: rgba(255, 230, 0, 0.6);
+    box-shadow: 0 0 40px rgba(255, 230, 0, 0.5), inset 0 0 20px rgba(255, 230, 0, 0.3);
+    border-color: var(--neon-yellow);
+}
+
+/* Status */
+.status-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-align: center;
+}
+
+/* Button */
+.neon-btn {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    padding: 12px 32px;
+    border: 1px solid var(--neon-green);
+    border-radius: 10px;
+    background: rgba(0, 255, 136, 0.08);
+    color: var(--neon-green);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.neon-btn:hover {
+    background: rgba(0, 255, 136, 0.18);
+    box-shadow: 0 0 24px rgba(0, 255, 136, 0.2);
+}
+
+#footer {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+}
+
+/* Responsive */
+@media (max-width: 520px) {
+
+    html,
+    body {
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: manipulation;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
+        align-items: flex-start;
+    }
+
+    #app {
+        padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 20px));
+        gap: 8px;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #board {
+        width: min(280px, 75vw);
+        height: min(280px, 75vw);
+    }
+
+    #footer {
+        padding-bottom: env(safe-area-inset-bottom, 20px);
+        font-size: 0.55rem;
+    }
+}
