@@ -167,6 +167,22 @@
     box-shadow: 0 4px 20px rgba(0,212,255,0.35);
     border-color: rgba(0,212,255,0.7);
 }
+.fb-float-btn.lb-float {
+    border-color: rgba(255,230,0,0.4);
+    box-shadow: 0 2px 12px rgba(255,230,0,0.15);
+}
+.fb-float-btn.lb-float:hover {
+    box-shadow: 0 4px 20px rgba(255,230,0,0.35);
+    border-color: rgba(255,230,0,0.7);
+}
+.fb-float-btn.fav-float {
+    border-color: rgba(255,100,100,0.4);
+    box-shadow: 0 2px 12px rgba(255,100,100,0.15);
+}
+.fb-float-btn.fav-float:hover {
+    box-shadow: 0 4px 20px rgba(255,100,100,0.35);
+    border-color: rgba(255,100,100,0.7);
+}
 `;
         document.head.appendChild(style);
     }
@@ -357,11 +373,87 @@
     }
 
     // ===== Floating Buttons =====
+    const FAV_KEY = 'neon-arcade-favorites';
+    // Map folder names to game IDs (must match hub card data-game attributes)
+    const FOLDER_TO_ID = {
+        'snake-game': 'snake', 'tic-tac-toe': 'ttt', 'pong': 'pong',
+        'tetris': 'tetris', 'breakout': 'breakout', 'space-invaders': 'invaders',
+        '2048': '2048', 'flappy': 'flappy', 'minesweeper': 'minesweeper',
+        'connect-four': 'connect4', 'whack-a-mole': 'whack', 'wordle': 'wordle',
+        'memory': 'memory', 'simon-says': 'simon', 'typing-speed': 'typing',
+    };
+    // Map folder names to leaderboard IDs (must match NeonLeaderboard.submit IDs)
+    const FOLDER_TO_LB = {
+        'snake-game': 'snake', 'tetris': 'tetris', 'flappy': 'flappy',
+        'breakout': 'breakout', 'space-invaders': 'space-invaders',
+        '2048': '2048', 'whack-a-mole': 'whack-a-mole',
+    };
+
+    function getCurrentFolder() {
+        const path = window.location.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+        return path.length > 0 ? path[path.length - 1] : '';
+    }
+
+    function isHubPage() {
+        const folder = getCurrentFolder();
+        return !folder || folder === 'neon-arcade' || folder === 'index.html';
+    }
+
     function createButtons() {
         addStyles();
         const wrap = document.createElement('div');
         wrap.className = 'fb-floating-wrap';
 
+        const folder = getCurrentFolder();
+        const gameId = FOLDER_TO_ID[folder];
+        const lbId = FOLDER_TO_LB[folder];
+
+        // Leaderboard button (only on scored game pages)
+        if (lbId && !isHubPage()) {
+            const lbBtn = document.createElement('button');
+            lbBtn.className = 'fb-float-btn lb-float';
+            lbBtn.title = 'Leaderboard';
+            lbBtn.innerHTML = '🏆';
+            lbBtn.setAttribute('aria-label', 'Leaderboard');
+            lbBtn.addEventListener('click', () => {
+                if (window.NeonSFX) NeonSFX.click();
+                if (window.NeonLeaderboard) {
+                    NeonLeaderboard.show(lbId, getGameName());
+                }
+            });
+            wrap.appendChild(lbBtn);
+        }
+
+        // Favorite button (only on game pages, not hub)
+        if (gameId && !isHubPage()) {
+            const favBtn = document.createElement('button');
+            favBtn.className = 'fb-float-btn fav-float';
+            favBtn.setAttribute('aria-label', 'Favorite');
+
+            const favs = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+            let isFav = favs.includes(gameId);
+            favBtn.innerHTML = isFav ? '❤️' : '🤍';
+            favBtn.title = isFav ? 'Remove from Favorites' : 'Add to Favorites';
+
+            favBtn.addEventListener('click', () => {
+                if (window.NeonSFX) NeonSFX.click();
+                const current = JSON.parse(localStorage.getItem(FAV_KEY) || '[]');
+                const idx = current.indexOf(gameId);
+                if (idx >= 0) {
+                    current.splice(idx, 1);
+                    isFav = false;
+                } else {
+                    current.push(gameId);
+                    isFav = true;
+                }
+                localStorage.setItem(FAV_KEY, JSON.stringify(current));
+                favBtn.innerHTML = isFav ? '❤️' : '🤍';
+                favBtn.title = isFav ? 'Remove from Favorites' : 'Add to Favorites';
+            });
+            wrap.appendChild(favBtn);
+        }
+
+        // Suggestion
         const sugBtn = document.createElement('button');
         sugBtn.className = 'fb-float-btn sug-float';
         sugBtn.title = 'Suggest a Feature';
@@ -372,6 +464,7 @@
             openFeedbackModal('suggestion');
         });
 
+        // Bug report
         const bugBtn = document.createElement('button');
         bugBtn.className = 'fb-float-btn';
         bugBtn.title = 'Report a Bug';

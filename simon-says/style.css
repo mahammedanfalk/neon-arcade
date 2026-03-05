@@ -336,6 +336,35 @@ body::before {
     border-color: var(--neon-yellow);
 }
 
+#btn-4 {
+    background: rgba(255, 138, 0, 0.15);
+    border-color: rgba(255, 138, 0, 0.3);
+}
+
+#btn-4.lit {
+    background: rgba(255, 138, 0, 0.6);
+    box-shadow: 0 0 40px rgba(255, 138, 0, 0.5), inset 0 0 20px rgba(255, 138, 0, 0.3);
+    border-color: var(--neon-orange);
+}
+
+#btn-5 {
+    background: rgba(180, 77, 255, 0.15);
+    border-color: rgba(180, 77, 255, 0.3);
+}
+
+#btn-5.lit {
+    background: rgba(180, 77, 255, 0.6);
+    box-shadow: 0 0 40px rgba(180, 77, 255, 0.5), inset 0 0 20px rgba(180, 77, 255, 0.3);
+    border-color: var(--neon-purple);
+}
+
+/* 6-button Hard mode: 3×2 grid */
+#board.board-6 {
+    grid-template-columns: 1fr 1fr 1fr;
+    width: 360px;
+    height: 240px;
+}
+
 /* Status */
 .status-text {
     font-family: 'Orbitron', sans-serif;
@@ -405,6 +434,11 @@ body::before {
     #board {
         width: min(260px, 70vw);
         height: min(260px, 70vw);
+    }
+
+    #board.board-6 {
+        width: min(360px, 90vw);
+        height: min(240px, 60vw);
     }
 
     #footer {

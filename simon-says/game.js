@@ -4,9 +4,9 @@
 
     // ===== Difficulty Config =====
     const DIFF = {
-        easy: { showDelay: 550, showDur: 450, speedInc: 10, label: 'Slow & steady' },
-        medium: { showDelay: 400, showDur: 350, speedInc: 20, label: 'Standard pace' },
-        hard: { showDelay: 280, showDur: 250, speedInc: 30, label: 'Lightning fast!' },
+        easy: { showDelay: 550, showDur: 450, speedInc: 10, buttons: 4, label: 'Slow & steady' },
+        medium: { showDelay: 400, showDur: 350, speedInc: 20, buttons: 4, label: 'Standard pace' },
+        hard: { showDelay: 280, showDur: 250, speedInc: 30, buttons: 6, label: '6 buttons — fast!' },
     };
 
     let difficulty = 'medium';
@@ -28,7 +28,8 @@
     let oppAlive = true;
 
     // DOM
-    const buttons = document.querySelectorAll('.simon-btn');
+    const allButtons = document.querySelectorAll('.simon-btn');
+    let buttons = document.querySelectorAll('.simon-btn:not(.hidden)');
     const roundEl = document.getElementById('round-val');
     const bestEl = document.getElementById('best-val');
     const statusEl = document.getElementById('status');
@@ -41,7 +42,7 @@
 
     // Audio
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const TONES = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+    const TONES = [261.63, 329.63, 392.00, 523.25, 587.33, 739.99]; // C4, E4, G4, C5, D5, F#5
 
     function playTone(index, duration = 200) {
         try {
@@ -127,20 +128,21 @@
         round++;
         roundEl.textContent = round;
 
+        const numBtns = DIFF[difficulty].buttons;
         if (gameMode === 'online' && isHost) {
             // Host generates and broadcasts next color
-            const nextColor = Math.floor(Math.random() * 4);
+            const nextColor = Math.floor(Math.random() * numBtns);
             sequence.push(nextColor);
             if (conn) conn.send({ type: 'next-round', color: nextColor, round: round });
         } else if (gameMode !== 'online') {
-            sequence.push(Math.floor(Math.random() * 4));
+            sequence.push(Math.floor(Math.random() * numBtns));
         }
 
         showSequence();
     }
 
     // Player clicks a button
-    buttons.forEach((btn, index) => {
+    allButtons.forEach((btn, index) => {
         const handler = (e) => {
             e.preventDefault();
             if (!accepting || !gameActive) return;
@@ -293,6 +295,20 @@
     });
 
     // ===== Difficulty Selector =====
+    function updateBoardLayout() {
+        const board = document.getElementById('board');
+        const numBtns = DIFF[difficulty].buttons;
+        const extraBtns = document.querySelectorAll('.simon-btn-extra');
+        if (numBtns === 6) {
+            board.classList.add('board-6');
+            extraBtns.forEach(b => b.classList.remove('hidden'));
+        } else {
+            board.classList.remove('board-6');
+            extraBtns.forEach(b => b.classList.add('hidden'));
+        }
+        buttons = document.querySelectorAll('.simon-btn:not(.hidden)');
+    }
+
     document.querySelectorAll('#diff-selector .diff-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             if (gameMode === 'online') return; // Guard
@@ -300,6 +316,7 @@
             document.querySelectorAll('#diff-selector .diff-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             difficulty = btn.dataset.diff;
+            updateBoardLayout();
             const key = `simon-best-${difficulty}`;
             bestScore = parseInt(localStorage.getItem(key) || '0', 10);
             bestEl.textContent = bestScore;
