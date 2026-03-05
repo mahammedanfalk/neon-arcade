@@ -76,6 +76,9 @@
     // Light up a button
     function lightButton(index, duration) {
         const btn = buttons[index];
+        // Force un-glow first (handles repeated same-color in sequence)
+        btn.classList.remove('lit');
+        void btn.offsetWidth; // force reflow so the browser registers the removal
         btn.classList.add('lit');
         playTone(index, duration);
         setTimeout(() => btn.classList.remove('lit'), duration);
