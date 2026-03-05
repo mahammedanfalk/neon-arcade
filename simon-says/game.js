@@ -110,7 +110,13 @@
         roundEl.textContent = '0';
         if (oppRoundEl) oppRoundEl.textContent = '0';
         startBtn.textContent = 'RESTART';
-        nextRound();
+
+        if (gameMode === 'online' && !isHost) {
+            // Guest waits for host to send first round
+            statusEl.textContent = 'Waiting for pattern...';
+        } else {
+            nextRound();
+        }
     }
 
     // Add next color and show
@@ -126,7 +132,6 @@
         } else if (gameMode !== 'online') {
             sequence.push(Math.floor(Math.random() * 4));
         }
-        // Guest waits for 'next-round' from host
 
         showSequence();
     }
