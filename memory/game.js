@@ -553,7 +553,15 @@
         conn.on('data', (data) => {
             switch (data.type) {
                 case 'start':
-                    // Guest receives board order from host
+                    // Guest receives board order and difficulty from host
+                    if (data.difficulty) {
+                        memDifficulty = data.difficulty;
+                        TOTAL_PAIRS = DIFF_CONFIG[memDifficulty].pairs;
+                        document.querySelectorAll('#diff-selector .diff-btn').forEach(b => {
+                            b.classList.remove('active');
+                            if (b.dataset.diff === memDifficulty) b.classList.add('active');
+                        });
+                    }
                     startGame(data.order);
                     break;
                 case 'flip':
@@ -566,10 +574,14 @@
         conn.on('close', () => handleDisconnect());
         conn.on('error', () => handleDisconnect());
 
-        // If host, auto-start a game
+        // If host, wait a moment for the guest's data handler to be ready, then start
         if (isHost) {
-            startGame();
-            conn.send({ type: 'start', order: boardSeed });
+            setTimeout(() => {
+                startGame();
+                if (conn) {
+                    conn.send({ type: 'start', order: boardSeed, difficulty: memDifficulty });
+                }
+            }, 500);
         }
     }
 
