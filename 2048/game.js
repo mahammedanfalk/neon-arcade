@@ -267,6 +267,7 @@
         playBtn.textContent = 'PLAY AGAIN';
         overlay.classList.remove('hidden');
         if (window.NeonSFX) NeonSFX.gameOver();
+        if (window.NeonLeaderboard) NeonLeaderboard.submit('2048', score, 'Player');
     }
 
     // ===== Start =====

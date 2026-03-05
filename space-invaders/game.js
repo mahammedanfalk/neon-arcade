@@ -432,6 +432,7 @@
         `;
         playBtn.textContent = 'PLAY AGAIN';
         overlay.classList.remove('hidden');
+        if (window.NeonLeaderboard) NeonLeaderboard.submit('space-invaders', score, 'Player');
     }
 
     function togglePause() {

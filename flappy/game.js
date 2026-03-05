@@ -226,6 +226,7 @@
             `;
             playBtn.textContent = 'PLAY AGAIN';
             overlay.classList.remove('hidden');
+            if (window.NeonLeaderboard) NeonLeaderboard.submit('flappy', score, 'Player');
         }, 600);
     }
 

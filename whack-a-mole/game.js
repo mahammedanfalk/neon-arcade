@@ -264,6 +264,7 @@
 
         playBtn.textContent = 'PLAY AGAIN';
         overlay.classList.remove('hidden');
+        if (window.NeonLeaderboard && gameMode !== 'online') NeonLeaderboard.submit('whack-a-mole', score, 'Player');
     }
 
     // ===== Play Button =====

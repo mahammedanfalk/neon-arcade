@@ -111,6 +111,7 @@
             newBestEl.classList.add('hidden');
         }
         gameOverScreen.classList.remove('hidden');
+        if (window.NeonLeaderboard) NeonLeaderboard.submit('snake', score, 'Player');
     }
 
     function togglePause() {
