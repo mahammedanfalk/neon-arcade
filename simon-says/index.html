@@ -30,6 +30,19 @@
             <div id="subtitle">NEON EDITION</div>
         </header>
 
+        <!-- Mode selector -->
+        <div id="mode-selector">
+            <button class="mode-btn active" data-mode="solo" id="mode-solo">SOLO</button>
+            <button class="mode-btn" data-mode="online" id="mode-online">ONLINE</button>
+        </div>
+
+        <!-- Difficulty selector -->
+        <div id="diff-selector">
+            <button class="diff-btn" data-diff="easy">EASY</button>
+            <button class="diff-btn active" data-diff="medium">MEDIUM</button>
+            <button class="diff-btn" data-diff="hard">HARD</button>
+        </div>
+
         <div id="hud">
             <div class="hud-item">
                 <span class="hud-label">ROUND</span>
@@ -38,6 +51,37 @@
             <div class="hud-item">
                 <span class="hud-label">BEST</span>
                 <span class="hud-value" id="best-val">0</span>
+            </div>
+            <div class="hud-item hud-online hidden">
+                <span class="hud-label">OPPONENT</span>
+                <span class="hud-value" id="opp-round-val">0</span>
+            </div>
+        </div>
+
+        <!-- Online Panel -->
+        <div id="online-panel" class="hidden">
+            <div id="online-lobby">
+                <button id="create-room-btn" class="neon-btn-sm">CREATE ROOM</button>
+                <div class="join-row">
+                    <input type="text" id="room-code-input" placeholder="CODE" maxlength="5" />
+                    <button id="join-room-btn" class="neon-btn-sm">JOIN</button>
+                </div>
+            </div>
+            <div id="online-waiting" class="hidden">
+                <p id="waiting-text">Creating room...</p>
+                <div id="room-code-display" class="hidden" style="margin-top:8px;">
+                    <span>Room Code: </span><strong id="room-code"></strong>
+                    <button id="copy-code-btn" title="Copy Invite Link">🔗</button>
+                </div>
+                <p id="share-hint" class="hidden" style="font-size:0.55rem;margin-top:4px;color:rgba(228,228,240,0.4);">
+                    Share the link to invite a friend</p>
+                <button id="cancel-online-btn" class="neon-btn-sm"
+                    style="margin-top:10px;border-color:rgba(255,45,117,0.4);color:#ff2d75;">CANCEL</button>
+            </div>
+            <div id="online-connected" class="hidden">
+                <p style="color:#00ff88;">✓ Opponent connected!</p>
+                <button id="disconnect-btn" class="neon-btn-sm hidden"
+                    style="margin-top:6px;border-color:rgba(255,45,117,0.4);color:#ff2d75;">DISCONNECT</button>
             </div>
         </div>
 
@@ -58,6 +102,7 @@
         </footer>
     </div>
 
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="../sfx.js"></script>
     <script src="game.js"></script>
 </body>
