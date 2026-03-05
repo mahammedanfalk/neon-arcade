@@ -353,16 +353,20 @@
         } else {
             updateDesktop();
         }
-        // Send state to guest
+        // Send state to guest — normalized to 0..1
         if (mode === 'online' && isHost && conn) {
             conn.send({
                 type: 'state',
-                p1: { x: paddle1.x, y: paddle1.y },
-                p2: { x: paddle2.x, y: paddle2.y },
-                ball: { x: ball.x, y: ball.y, vx: ball.vx, vy: ball.vy },
+                // Normalize paddle "slide axis" position: 0..1
+                // Host is always the one running physics on their own canvas
+                p1n: isMobile ? paddle1.x / (CANVAS_W - PADDLE_W) : paddle1.y / (CANVAS_H - PADDLE_H),
+                p2n: isMobile ? paddle2.x / (CANVAS_W - PADDLE_W) : paddle2.y / (CANVAS_H - PADDLE_H),
+                // Normalize ball position
+                bx: ball.x / CANVAS_W,
+                by: ball.y / CANVAS_H,
                 ts: topScore,
                 bs: bottomScore,
-                trail: ballTrail.slice(-4)
+                hostMobile: isMobile
             });
         }
     }
@@ -820,25 +824,58 @@
                     if (!isHost) gameLoop(); // guest runs render loop
                     break;
                 case 'state':
-                    // Guest receives full game state from host
+                    // Guest receives normalized state from host
                     if (!isHost) {
-                        paddle1.x = data.p1.x; paddle1.y = data.p1.y;
-                        paddle2.x = data.p2.x; paddle2.y = data.p2.y;
-                        ball.x = data.ball.x; ball.y = data.ball.y;
-                        ball.vx = data.ball.vx; ball.vy = data.ball.vy;
+                        const hm = data.hostMobile;
+                        const sameLayout = (isMobile === hm);
+
+                        if (sameLayout) {
+                            // Same layout — direct denormalize
+                            if (isMobile) {
+                                paddle1.x = data.p1n * (CANVAS_W - PADDLE_W);
+                                paddle2.x = data.p2n * (CANVAS_W - PADDLE_W);
+                            } else {
+                                paddle1.y = data.p1n * (CANVAS_H - PADDLE_H);
+                                paddle2.y = data.p2n * (CANVAS_H - PADDLE_H);
+                            }
+                            ball.x = data.bx * CANVAS_W;
+                            ball.y = data.by * CANVAS_H;
+                        } else {
+                            // Cross-platform: swap axes
+                            // Host's "slide axis" maps to guest's "slide axis"
+                            if (isMobile) {
+                                // Guest is mobile, host is desktop
+                                // Host paddle1 Y -> guest paddle1 X
+                                paddle1.x = data.p1n * (CANVAS_W - PADDLE_W);
+                                paddle2.x = data.p2n * (CANVAS_W - PADDLE_W);
+                                // Host ball: x=horizontal progress, y=vertical
+                                // Desktop: x=left-to-right (goal axis), y=bounce axis
+                                // Mobile: y=top-to-bottom (goal axis), x=bounce axis
+                                ball.x = data.by * CANVAS_W;  // host's vertical -> guest's horizontal
+                                ball.y = data.bx * CANVAS_H;  // host's horizontal -> guest's vertical
+                            } else {
+                                // Guest is desktop, host is mobile
+                                paddle1.y = data.p1n * (CANVAS_H - PADDLE_H);
+                                paddle2.y = data.p2n * (CANVAS_H - PADDLE_H);
+                                ball.x = data.by * CANVAS_W;
+                                ball.y = data.bx * CANVAS_H;
+                            }
+                        }
                         topScore = data.ts;
                         bottomScore = data.bs;
-                        if (data.trail) ballTrail = data.trail;
+                        ballTrail.push({ x: ball.x, y: ball.y });
+                        if (ballTrail.length > 6) ballTrail.shift();
                         updateScoreboard();
                     }
                     break;
                 case 'paddle':
-                    // Host receives guest's paddle position
+                    // Host receives guest's normalized paddle position
                     if (isHost) {
+                        const guestVal = data.n; // 0..1 normalized position
                         if (isMobile) {
-                            paddle1.x = data.x; // guest=top=paddle1
+                            paddle1.x = guestVal * (CANVAS_W - PADDLE_W); // guest=top=paddle1
                         } else {
-                            paddle2.y = data.y; // guest=right=paddle2
+                            paddle2.y = guestVal * (CANVAS_H - PADDLE_H); // guest=right=paddle2
                         }
                     }
                     break;
@@ -961,11 +998,16 @@
     // Send paddle position to host periodically (guest only)
     setInterval(() => {
         if (mode === 'online' && !isHost && conn && running) {
+            // Send normalized 0..1 paddle position
+            let normalizedPos;
             if (isMobile) {
-                conn.send({ type: 'paddle', x: paddle1.x });
+                // Guest mobile: paddle1 (top) controls via X
+                normalizedPos = paddle1.x / (CANVAS_W - PADDLE_W);
             } else {
-                conn.send({ type: 'paddle', y: paddle2.y });
+                // Guest desktop: paddle2 (right) controls via Y
+                normalizedPos = paddle2.y / (CANVAS_H - PADDLE_H);
             }
+            conn.send({ type: 'paddle', n: Math.max(0, Math.min(1, normalizedPos)) });
         }
     }, 50);
 
