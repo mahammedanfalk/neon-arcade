@@ -170,11 +170,13 @@
                     const gameX = (t.clientX - rect.left) * scaleX - PADDLE_W / 2;
                     const clampedX = Math.max(0, Math.min(CANVAS_W - PADDLE_W, gameX));
                     if (t.clientY >= midY) {
-                        // Bottom half = user's paddle (paddle2)
-                        paddle2.x = clampedX;
+                        // Bottom half = paddle2
+                        if (mode !== 'online' || isHost) {
+                            paddle2.x = clampedX;
+                        }
                     } else {
-                        // Top half = P2 paddle (paddle1) — only in 2P mode
-                        if (mode === '2p') {
+                        // Top half = paddle1
+                        if (mode === '2p' || (mode === 'online' && !isHost)) {
                             paddle1.x = clampedX;
                         }
                     }
@@ -188,9 +190,13 @@
                     const gameY = (t.clientY - rect.top) * scaleY - PADDLE_H / 2;
                     const clampedY = Math.max(0, Math.min(CANVAS_H - PADDLE_H, gameY));
                     if (t.clientX < midX) {
-                        paddle1.y = clampedY;
+                        // Left half = paddle1
+                        if (mode !== 'online' || isHost) {
+                            paddle1.y = clampedY;
+                        }
                     } else {
-                        if (mode === '2p') {
+                        // Right half = paddle2
+                        if (mode === '2p' || (mode === 'online' && !isHost)) {
                             paddle2.y = clampedY;
                         }
                     }
@@ -347,7 +353,16 @@
     }
 
     function update() {
-        if (mode === 'online' && !isHost) return; // Guest doesn't run physics
+        if (mode === 'online' && !isHost) {
+            // Guest doesn't run physics, but still needs local paddle control
+            if (!isMobile) {
+                // Desktop guest controls paddle2 (right) via W/S or arrows
+                if (keys['w'] || keys['W'] || keys['ArrowUp']) paddle2.y -= PADDLE_SPEED;
+                if (keys['s'] || keys['S'] || keys['ArrowDown']) paddle2.y += PADDLE_SPEED;
+                paddle2.y = Math.max(0, Math.min(CANVAS_H - PADDLE_H, paddle2.y));
+            }
+            return;
+        }
         if (isMobile) {
             updateMobile();
         } else {
@@ -832,31 +847,27 @@
                         if (sameLayout) {
                             // Same layout — direct denormalize
                             if (isMobile) {
-                                paddle1.x = data.p1n * (CANVAS_W - PADDLE_W);
+                                // Guest controls paddle1 (top), host controls paddle2 (bottom)
+                                // Only update HOST's paddle (paddle2), leave guest's paddle1 alone
                                 paddle2.x = data.p2n * (CANVAS_W - PADDLE_W);
                             } else {
+                                // Guest controls paddle2 (right), host controls paddle1 (left)
                                 paddle1.y = data.p1n * (CANVAS_H - PADDLE_H);
-                                paddle2.y = data.p2n * (CANVAS_H - PADDLE_H);
                             }
                             ball.x = data.bx * CANVAS_W;
                             ball.y = data.by * CANVAS_H;
                         } else {
                             // Cross-platform: swap axes
-                            // Host's "slide axis" maps to guest's "slide axis"
                             if (isMobile) {
                                 // Guest is mobile, host is desktop
-                                // Host paddle1 Y -> guest paddle1 X
-                                paddle1.x = data.p1n * (CANVAS_W - PADDLE_W);
+                                // Guest controls paddle1 (top) via X, host's paddle2 comes from host
                                 paddle2.x = data.p2n * (CANVAS_W - PADDLE_W);
-                                // Host ball: x=horizontal progress, y=vertical
-                                // Desktop: x=left-to-right (goal axis), y=bounce axis
-                                // Mobile: y=top-to-bottom (goal axis), x=bounce axis
-                                ball.x = data.by * CANVAS_W;  // host's vertical -> guest's horizontal
-                                ball.y = data.bx * CANVAS_H;  // host's horizontal -> guest's vertical
+                                ball.x = data.by * CANVAS_W;
+                                ball.y = data.bx * CANVAS_H;
                             } else {
                                 // Guest is desktop, host is mobile
+                                // Guest controls paddle2 (right) via Y, host's paddle1 comes from host
                                 paddle1.y = data.p1n * (CANVAS_H - PADDLE_H);
-                                paddle2.y = data.p2n * (CANVAS_H - PADDLE_H);
                                 ball.x = data.by * CANVAS_W;
                                 ball.y = data.bx * CANVAS_H;
                             }
