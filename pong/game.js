@@ -939,19 +939,20 @@
 
     if ($('#copy-code-btn')) {
         $('#copy-code-btn').addEventListener('click', () => {
-            navigator.clipboard.writeText(roomCode).then(() => {
+            const inviteUrl = window.location.origin + window.location.pathname + '?code=' + roomCode;
+            navigator.clipboard.writeText(inviteUrl).then(() => {
                 const btn = $('#copy-code-btn');
                 btn.textContent = '✅';
-                setTimeout(() => { btn.textContent = '📋'; }, 1500);
+                setTimeout(() => { btn.textContent = '🔗'; }, 1500);
             }).catch(() => {
                 const el = document.createElement('textarea');
-                el.value = roomCode;
+                el.value = inviteUrl;
                 document.body.appendChild(el); el.select();
                 document.execCommand('copy');
                 document.body.removeChild(el);
                 const btn = $('#copy-code-btn');
                 btn.textContent = '✅';
-                setTimeout(() => { btn.textContent = '📋'; }, 1500);
+                setTimeout(() => { btn.textContent = '🔗'; }, 1500);
             });
             if (window.NeonSFX) NeonSFX.click();
         });
@@ -968,6 +969,29 @@
         }
     }, 50);
 
+    // ===== Auto-join from invite link =====
+    function checkInviteLink() {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code && code.length >= 3) {
+            // Clean URL
+            window.history.replaceState({}, '', window.location.pathname);
+            // Switch to online mode and auto-join
+            setMode('online');
+            const input = $('#room-code-input');
+            if (input) {
+                input.value = code.toUpperCase();
+                setTimeout(() => {
+                    const joinBtn = $('#join-room-btn');
+                    if (joinBtn) joinBtn.click();
+                }, 500);
+            }
+        }
+    }
+
     // ===== Bootstrap =====
-    window.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('DOMContentLoaded', () => {
+        init();
+        checkInviteLink();
+    });
 })();
