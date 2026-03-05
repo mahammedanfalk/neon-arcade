@@ -270,6 +270,10 @@
     // ===== Play Button =====
     playBtn.addEventListener('click', () => {
         if (window.NeonSFX) NeonSFX.click();
+        if (disconnected) {
+            window.location.href = '../index.html';
+            return;
+        }
         if (gameMode === 'online' && isHost && conn) {
             startGame();
             conn.send({ type: 'start' });
@@ -452,9 +456,12 @@
         }
     }
 
+    let disconnected = false;
+
     function handleDisconnect() {
         conn = null;
         gameRunning = false;
+        disconnected = true;
         clearInterval(timerInterval);
         clearTimeout(spawnTimeout);
         overlayIcon.textContent = '💔';

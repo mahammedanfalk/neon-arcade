@@ -255,6 +255,10 @@
     startBtn.addEventListener('click', () => {
         if (window.NeonSFX) NeonSFX.click();
         if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (disconnected) {
+            window.location.href = '../index.html';
+            return;
+        }
 
         if (gameMode === 'online' && isHost && conn) {
             startGame();
@@ -485,10 +489,13 @@
         conn.on('error', () => handleDisconnect());
     }
 
+    let disconnected = false;
+
     function handleDisconnect() {
         conn = null;
         gameActive = false;
         accepting = false;
+        disconnected = true;
         statusEl.textContent = '💔 Opponent disconnected';
         startBtn.textContent = 'OK';
         startBtn.disabled = false;

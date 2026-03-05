@@ -571,11 +571,12 @@
     function handleDisconnect() {
         conn = null;
         gameActive = false;
-        statusText.textContent = 'Opponent disconnected';
+        statusText.textContent = 'Opponent disconnected — returning to Arcade...';
         statusBar.className = '';
         showLobby();
         disconnectBtn.classList.add('hidden');
         if (window.NeonSFX) NeonSFX.gameOver();
+        setTimeout(() => { window.location.href = '../index.html'; }, 2000);
     }
 
     document.getElementById('cancel-online-btn').addEventListener('click', () => {

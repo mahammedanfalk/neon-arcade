@@ -69,6 +69,7 @@
     // ===== Difficulty selector =====
     document.querySelectorAll('#diff-selector .diff-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            if (gameMode === 'online') return; // Lock difficulty during online session
             if (window.NeonSFX) NeonSFX.click();
             document.querySelectorAll('#diff-selector .diff-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -416,6 +417,10 @@
     // ===== Input =====
     playBtn.addEventListener('click', () => {
         if (window.NeonSFX) NeonSFX.click();
+        if (disconnected) {
+            window.location.href = '../index.html';
+            return;
+        }
         if (gameMode === 'online') {
             // Host starts and sends board to opponent
             if (isHost && conn) {
@@ -585,9 +590,12 @@
         }
     }
 
+    let disconnected = false;
+
     function handleDisconnect() {
         conn = null;
         gameRunning = false;
+        disconnected = true;
         stopTimer();
         overlayIcon.textContent = '💔';
         overlayTitle.textContent = 'Disconnected';

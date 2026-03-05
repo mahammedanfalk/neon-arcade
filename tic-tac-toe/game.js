@@ -642,11 +642,12 @@
     function handleDisconnect() {
         conn = null;
         gameActive = false;
-        statusText.textContent = 'Opponent disconnected';
+        statusText.textContent = 'Opponent disconnected — returning to Arcade...';
         statusEl.className = '';
         showLobby();
         disconnectBtn.classList.add('hidden');
         if (window.NeonSFX) NeonSFX.locked();
+        setTimeout(() => { window.location.href = '../index.html'; }, 2000);
     }
 
     function cancelOnline() {
