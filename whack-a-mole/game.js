@@ -395,9 +395,31 @@
         if (window.NeonSFX) NeonSFX.gameStart();
         showConnected();
 
+        // Reset state for fresh game
+        gameRunning = false;
+        clearInterval(timerInterval);
+        clearTimeout(spawnTimeout);
+        score = 0;
+        oppScore = 0;
+        combo = 0;
+        timeLeft = GAME_DURATION;
+        scoreEl.textContent = '0';
+        timeEl.textContent = GAME_DURATION;
+        comboEl.textContent = '×1';
+        if (oppScoreEl) oppScoreEl.textContent = '0';
+        // Clear all active moles
+        holes.forEach(h => { h.classList.remove('active', 'golden', 'whacked'); });
+        activeMoles.clear();
+        overlay.classList.add('hidden');
+
         conn.on('data', (data) => {
             switch (data.type) {
                 case 'start':
+                    // Reset again on explicit start
+                    score = 0; oppScore = 0; combo = 0;
+                    scoreEl.textContent = '0';
+                    if (oppScoreEl) oppScoreEl.textContent = '0';
+                    comboEl.textContent = '×1';
                     startGame();
                     break;
                 case 'spawn':
@@ -417,10 +439,15 @@
         conn.on('close', () => handleDisconnect());
         conn.on('error', () => handleDisconnect());
 
-        // If host, auto-start
+        // If host, auto-start after brief delay
         if (isHost) {
-            startGame();
-            conn.send({ type: 'start' });
+            setTimeout(() => {
+                score = 0; oppScore = 0;
+                scoreEl.textContent = '0';
+                if (oppScoreEl) oppScoreEl.textContent = '0';
+                startGame();
+                conn.send({ type: 'start' });
+            }, 600);
         }
     }
 
@@ -458,6 +485,13 @@
         gameRunning = false;
         clearInterval(timerInterval);
         clearTimeout(spawnTimeout);
+        // Clear all active moles
+        holes.forEach(h => { h.classList.remove('active', 'golden', 'whacked'); });
+        activeMoles.clear();
+        score = 0; oppScore = 0; combo = 0;
+        scoreEl.textContent = '0';
+        comboEl.textContent = '×1';
+        if (oppScoreEl) oppScoreEl.textContent = '0';
     }
 
     document.getElementById('copy-code-btn').addEventListener('click', () => {
