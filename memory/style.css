@@ -372,6 +372,7 @@ body::before {
     width: 100%;
     max-width: 500px;
     perspective: 600px;
+    justify-items: center;
 }
 
 .memory-card {
